@@ -1,5 +1,5 @@
-IF OBJECT_ID('ReportingDB.dbo.NewEventCube_FactBookmarks','U') IS NOT NULL
-  DROP TABLE ReportingDB.dbo.NewEventCube_FactBookmarks
+IF OBJECT_ID('ReportingDB.dbo.FactBookmarks','U') IS NOT NULL
+  DROP TABLE ReportingDB.dbo.FactBookmarks
 
 SELECT DISTINCT S.Created Timestamp, S.ApplicationId, GlobalUserId, S.UserId,
 CASE
@@ -11,9 +11,9 @@ CASE
   WHEN ListTypeId = 5 THEN 'File'
   ELSE '???'
 END ListType, S.ItemId
-INTO ReportingDB.dbo.NewEventCube_FactBookmarks
+INTO ReportingDB.dbo.FactBookmarks
 FROM Ratings.dbo.UserFavorites S
 LEFT OUTER JOIN Ratings.dbo.Item I ON S.ItemId = I.ItemId
 LEFT OUTER JOIN Ratings.dbo.Topic T ON I.ParentTopicId = T.TopicId
-JOIN ReportingDB.dbo.NewEventCube_DimUsers U ON S.UserId = U.UserId
+JOIN ReportingDB.dbo.DimUsers U ON S.UserId = U.UserId
 

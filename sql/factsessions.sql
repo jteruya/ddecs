@@ -1,5 +1,5 @@
-IF OBJECT_ID('ReportingDB.dbo.NewEventCube_FactSessions') IS NOT NULL
-  DROP TABLE ReportingDB.dbo.NewEventCube_FactSessions
+IF OBJECT_ID('ReportingDB.dbo.FactSessions') IS NOT NULL
+  DROP TABLE ReportingDB.dbo.FactSessions
 
 SELECT DISTINCT StartDate Timestamp, S.ApplicationId, GlobalUserId, S.UserId,
 CASE WHEN BinaryVersion IS NULL THEN 'v???' WHEN LEFT(BinaryVersion,1) = 'v' THEN 'v'+RIGHT(LEFT(BinaryVersion,4),3) ELSE 'v'+LEFT(BinaryVersion,3) END BinaryVersion,
@@ -12,8 +12,8 @@ CASE
   WHEN AppTypeId = 6 THEN 'Blackberry'
   ELSE '???'
 END Device, CASE WHEN AppTypeId BETWEEN 1 AND 2 THEN 'iOS' WHEN AppTypeId = 3 THEN 'Android' ELSE 'Other' END DeviceType
-INTO ReportingDB.dbo.NewEventCube_FactSessions
+INTO ReportingDB.dbo.FactSessions
 FROM AnalyticsDB.dbo.Sessions S
-JOIN ReportingDB.dbo.NewEventCube_DimUsers U ON S.UserId = U.UserId
+JOIN ReportingDB.dbo.DimUsers U ON S.UserId = U.UserId
 WHERE S.UserId IS NOT NULL
 

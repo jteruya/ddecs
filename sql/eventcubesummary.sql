@@ -1,20 +1,20 @@
-IF OBJECT_ID('ReportingDB.dbo.NewEventCube_EventCubeSummary','U') IS NOT NULL
-  DROP TABLE ReportingDB.dbo.NewEventCube_EventCubeSummary
+IF OBJECT_ID('ReportingDB.dbo.EventCubeSummary','U') IS NOT NULL
+  DROP TABLE ReportingDB.dbo.EventCubeSummary
 
 SELECT S.ApplicationId, Name, StartDate, EndDate,
 OpenEvent, LeadScanning, SurveysOn, InteractiveMap, Leaderboard, Bookmarking, Photofeed, AttendeesList, QRCode, ExhibitorReqInfo, ExhibitorMsg, PrivateMsging, PeopleMatching, SocialNetworks, RatingsOn,
 BinaryVersion,
 Users, UsersActive, UsersFacebook, UsersTwitter, UsersLinkedIn, Sessions, Posts, PostsImage, PostsItem, Likes, Comments, Bookmarks, Follows, CheckIns, Ratings, Reviews, Surveys,
 ISNULL(PromotedPosts,0) PromotedPosts, ISNULL(GlobalPushNotifications,0) GlobalPushNotifications
-INTO ReportingDB.dbo.NewEventCube_EventCubeSummary
+INTO ReportingDB.dbo.EventCubeSummary
 FROM
 ( SELECT S.ApplicationId, Name, StartDate, EndDate,
   OpenEvent, LeadScanning, SurveysOn, InteractiveMap, Leaderboard, Bookmarking, Photofeed, AttendeesList, QRCode, ExhibitorReqInfo, ExhibitorMsg, PrivateMsging, PeopleMatching, SocialNetworks, RatingsOn,
   B.BinaryVersion,
   COUNT(*) Users, SUM(Active) UsersActive, SUM(Facebook) UsersFacebook, SUM(Twitter) UsersTwitter, SUM(LinkedIn) UsersLinkedIn,
   SUM(Sessions) Sessions, SUM(Posts) Posts, SUM(PostsImage) PostsImage, SUM(PostsItem) PostsItem, SUM(Likes) Likes, SUM(Comments) Comments, SUM(Bookmarks) Bookmarks, SUM(Follows) Follows, SUM(CheckIns) CheckIns, SUM(CheckInsHeadcount) CheckInsHeadcount, SUM(Ratings) Ratings, SUM(Reviews) Reviews, SUM(Surveys) Surveys
-  FROM ReportingDB.dbo.NewEventCube_UserCubeSummary S
-  JOIN ReportingDB.dbo.NewEventCube_DimEventBinaryVersion B ON S.ApplicationId = B.Applicationid
+  FROM ReportingDB.dbo.UserCubeSummary S
+  JOIN ReportingDB.dbo.DimEventBinaryVersion B ON S.ApplicationId = B.Applicationid
   GROUP BY S.ApplicationId, Name, StartDate, EndDate,
   OpenEvent, LeadScanning, SurveysOn, InteractiveMap, Leaderboard, Bookmarking, Photofeed, AttendeesList, QRCode, ExhibitorReqInfo, ExhibitorMsg, PrivateMsging, PeopleMatching, SocialNetworks, RatingsOn,
   B.BinaryVersion

@@ -1,5 +1,5 @@
-IF OBJECT_ID('ReportingDB.dbo.NewEventCube_DimEvents','U') IS NOT NULL
-  DROP TABLE ReportingDB.dbo.NewEventCube_DimEvents
+IF OBJECT_ID('ReportingDB.dbo.DimEvents','U') IS NOT NULL
+  DROP TABLE ReportingDB.dbo.DimEvents
 
 SELECT DISTINCT A.ApplicationId, dbo.STRIP_STRING(A.Name) Name,
 
@@ -24,11 +24,11 @@ ISNULL(PeopleMatching,0) PeopleMatching,
 ISNULL(SocialNetworks,0) SocialNetworks,
 ISNULL(RatingsOn,0) RatingsOn
 
-INTO ReportingDB.dbo.NewEventCube_DimEvents
+INTO ReportingDB.dbo.DimEvents
 
 FROM AuthDB.dbo.Applications A
 
-JOIN (SELECT DISTINCT ApplicationId FROM ReportingDB.dbo.NewEventCube_DimUsers) U ON A.ApplicationId = U.Applicationid
+JOIN (SELECT DISTINCT ApplicationId FROM ReportingDB.dbo.DimUsers) U ON A.ApplicationId = U.Applicationid
 
 LEFT OUTER JOIN
 ( SELECT ApplicationId,

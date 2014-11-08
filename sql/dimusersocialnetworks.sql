@@ -8,6 +8,6 @@ MAX(CASE WHEN OAuthPartnerId = 6 THEN 1 ELSE 0 END) LinkedIn
 INTO ReportingDB.dbo.DimUserSocialNetworks
 FROM Ratings.dbo.UserOAuthTokens U
 JOIN Ratings.dbo.ApplicationOAuthKeys A ON AppOAuthMappingId = MappingId
-JOIN ReportingDB.dbo.NewEventCube_DimUsers S ON U.UserId = S.UserId
+JOIN ReportingDB.dbo.DimUsers S ON U.UserId = S.UserId
 WHERE OAuthPartnerId IN (1,2,6)
 GROUP BY U.UserId

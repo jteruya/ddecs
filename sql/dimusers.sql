@@ -1,8 +1,8 @@
-IF OBJECT_ID('ReportingDB.dbo.NewEventCube_TempDimUsers') IS NOT NULL
-  DROP TABLE ReportingDB.dbo.NewEventCube_TempDimUsers
+IF OBJECT_ID('ReportingDB.dbo.TempDimUsers') IS NOT NULL
+  DROP TABLE ReportingDB.dbo.TempDimUsers
 
 SELECT MIN(FirstTimestamp) FirstTimestamp, MAX(LastTimestamp) LastTimestamp, F.ApplicationId, GlobalUserId, F.UserId
-INTO ReportingDB.dbo.NewEventCube_TempDimUsers
+INTO ReportingDB.dbo.TempDimUsers
 FROM
 ( SELECT ApplicationId, UserId, MIN(StartDate) FirstTimestamp, MAX(StartDate) LastTimestamp
   FROM AnalyticsDB.dbo.Sessions
@@ -43,7 +43,7 @@ FROM
   GROUP BY ApplicationId, UserId
 ) F 
 LEFT OUTER JOIN AuthDB.dbo.IS_Users U ON F.ApplicationId = U.ApplicationId AND F.UserId = U.UserId
-WHERE F.ApplicationId NOT IN (SELECT ApplicationId FROM ReportingDB.dbo.NewEventCube_TestEvents)
+WHERE F.ApplicationId NOT IN (SELECT ApplicationId FROM ReportingDB.dbo.TestEvents)
 GROUP BY F.ApplicationId, GlobalUserId, F.UserId
 HAVING MIN(FirstTimestamp) >= '2013-05-16' AND MAX(LastTimestamp) <= GETUTCDATE()
 
@@ -58,27 +58,27 @@ HAVING MIN(FirstTimestamp) >= '2013-05-16' AND MAX(LastTimestamp) <= GETUTCDATE(
 -- ------------------  -------------------  
 -- 3.3.2               2013-05-16 23:21:42  
 
--- IF OBJECT_ID('ReportingDB.dbo.NewEventCube_DimBadUsers') IS NOT NULL
---   DROP TABLE ReportingDB.dbo.NewEventCube_DimBadUsers
+-- IF OBJECT_ID('ReportingDB.dbo.DimBadUsers') IS NOT NULL
+--   DROP TABLE ReportingDB.dbo.DimBadUsers
 -- 
 -- SELECT *
--- INTO ReportingDB.dbo.NewEventCube_DimBadUsers
--- FROM ReportingDB.dbo.NewEventCube_TempDimUsers
+-- INTO ReportingDB.dbo.DimBadUsers
+-- FROM ReportingDB.dbo.TempDimUsers
 -- WHERE GlobalUserId IS NULL
--- OR UserId IN (SELECT UserId FROM ReportingDB.dbo.NewEventCube_TempDimUsers GROUP BY UserId HAVING COUNT(DISTINCT ApplicationId) > 1)
+-- OR UserId IN (SELECT UserId FROM ReportingDB.dbo.TempDimUsers GROUP BY UserId HAVING COUNT(DISTINCT ApplicationId) > 1)
 -- OR UserId = 0
 
-IF OBJECT_ID('ReportingDB.dbo.NewEventCube_DimUsers') IS NOT NULL
-  DROP TABLE ReportingDB.dbo.NewEventCube_DimUsers
+IF OBJECT_ID('ReportingDB.dbo.DimUsers') IS NOT NULL
+  DROP TABLE ReportingDB.dbo.DimUsers
 
 SELECT *
-INTO ReportingDB.dbo.NewEventCube_DimUsers
-FROM ReportingDB.dbo.NewEventCube_TempDimUsers U WHERE 1=1
--- WHERE NOT EXISTS (SELECT 1 FROM ReportingDB.dbo.NewEventCube_DimBadUsers B WHERE U.ApplicationId = B.ApplicationId AND U.GlobalUserId = B.GlobalUserId AND U.UserId = B.UserId) -- Why the eff doesn't this work
+INTO ReportingDB.dbo.DimUsers
+FROM ReportingDB.dbo.TempDimUsers U WHERE 1=1
+-- WHERE NOT EXISTS (SELECT 1 FROM ReportingDB.dbo.DimBadUsers B WHERE U.ApplicationId = B.ApplicationId AND U.GlobalUserId = B.GlobalUserId AND U.UserId = B.UserId) -- Why the eff doesn't this work
 AND GlobalUserId IS NOT NULL
-AND NOT EXISTS (SELECT 1 FROM (SELECT UserId FROM ReportingDB.dbo.NewEventCube_TempDimUsers GROUP BY UserId HAVING COUNT(DISTINCT ApplicationId) > 1) B WHERE U.UserId = B.UserId)
+AND NOT EXISTS (SELECT 1 FROM (SELECT UserId FROM ReportingDB.dbo.TempDimUsers GROUP BY UserId HAVING COUNT(DISTINCT ApplicationId) > 1) B WHERE U.UserId = B.UserId)
 AND UserId != 0
 
-IF OBJECT_ID('ReportingDB.dbo.NewEventCube_TempDimUsers') IS NOT NULL
-  DROP TABLE ReportingDB.dbo.NewEventCube_TempDimUsers
+IF OBJECT_ID('ReportingDB.dbo.TempDimUsers') IS NOT NULL
+  DROP TABLE ReportingDB.dbo.TempDimUsers
 

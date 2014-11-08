@@ -1,8 +1,8 @@
-IF OBJECT_ID('ReportingDB.dbo.NewEventCube_DimUserDeviceType','U') IS NOT NULL
-  DROP TABLE ReportingDB.dbo.NewEventCube_DimUserDeviceType
+IF OBJECT_ID('ReportingDB.dbo.DimUserDeviceType','U') IS NOT NULL
+  DROP TABLE ReportingDB.dbo.DimUserDeviceType
 
 SELECT UserId, CASE WHEN Device IN ('iPhone','iPad') THEN 'iOS' WHEN Device = 'Android' THEN 'Android' ELSE 'Other' END DeviceType, Device
-INTO ReportingDB.dbo.NewEventCube_DimUserDeviceType
+INTO ReportingDB.dbo.DimUserDeviceType
 FROM
 ( SELECT DISTINCT UserId, LAST_VALUE(CASE
     WHEN AppTypeId = 1 THEN 'iPhone'
@@ -17,7 +17,7 @@ FROM
   FROM
   ( SELECT DISTINCT S.UserId, AppTypeId, 1.0*COUNT(*) OVER (PARTITION BY S.UserId, AppTypeId)/COUNT(*) OVER (PARTITION BY S.UserId) PctSessions
     FROM AnalyticsDB.dbo.Sessions S
-    JOIN ReportingDB.dbo.NewEventCube_DimUsers U ON S.UserId = U.UserId
+    JOIN ReportingDB.dbo.DimUsers U ON S.UserId = U.UserId
   ) S
 ) S
 

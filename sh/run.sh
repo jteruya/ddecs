@@ -2,7 +2,7 @@
 
 echo `date` starting script...
 
-wd="/home/anguyen/neweventcube/sql/"
+wd="/home/anguyen/eventcube/sql/"
 get_csv="python /home/anguyen/tools/get_csv.py "
 
 # Know which events and users to include
@@ -34,3 +34,4 @@ echo `date` running usercubesummary.sql; $get_csv $wd"usercubesummary.sql" no_ou
 echo `date` running eventcubesummary.sql; $get_csv $wd"eventcubesummary.sql" no_output
 
 echo `date` finished script...
+

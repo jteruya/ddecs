@@ -1,8 +1,8 @@
-IF OBJECT_ID('ReportingDB.dbo.NewEventCube_TestEvents') IS NOT NULL
-  DROP TABLE ReportingDB.dbo.NewEventCube_TestEvents
+IF OBJECT_ID('ReportingDB.dbo.TestEvents') IS NOT NULL
+  DROP TABLE ReportingDB.dbo.TestEvents
 
 SELECT S.*
-INTO ReportingDB.dbo.NewEventCube_TestEvents
+INTO ReportingDB.dbo.TestEvents
 FROM
 ( SELECT DISTINCT ApplicationId, dbo.STRIP_STRING(A.Name) Name
   FROM AuthDB.dbo.Applications A
