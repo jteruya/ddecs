@@ -1,6 +1,12 @@
 IF OBJECT_ID('ReportingDB.dbo.DimUserBinaryVersion','U') IS NOT NULL
   DROP TABLE ReportingDB.dbo.DimUserBinaryVersion
 
+--===================================================================================
+-- Per User ID, identifies the most common Binary Version used across all sessions. 
+-- Should no version be identified, defaults to "v???".
+-- * Upstream dependency on DimUsers.
+--===================================================================================
+
 SELECT DISTINCT UserId, LAST_VALUE(CASE WHEN BinaryVersion IS NULL THEN 'v???' WHEN LEFT(BinaryVersion,1) = 'v' THEN 'v'+RIGHT(LEFT(BinaryVersion,4),3) ELSE 'v'+LEFT(BinaryVersion,3) END) OVER (PARTITION BY UserId ORDER BY PctSessions ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) BinaryVersion
 INTO ReportingDB.dbo.DimUserBinaryVersion
 FROM
