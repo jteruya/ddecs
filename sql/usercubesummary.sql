@@ -1,6 +1,11 @@
 IF OBJECT_ID('ReportingDB.dbo.UserCubeSummary','U') IS NOT NULL
   DROP TABLE ReportingDB.dbo.UserCubeSummary
 
+--===================================================================================================
+-- * Upstream dependent on creation of all Dimension and Fact tables in ReportingDB. 
+-- Creates an aggregate at the User level with Application-level fields for slicing.
+--===================================================================================================
+
 SELECT U.ApplicationId, ISNULL(Name,'???') Name, StartDate, EndDate,
 ISNULL(OpenEvent,-1) OpenEvent, ISNULL(LeadScanning,-1) LeadScanning, ISNULL(SurveysOn,-1) SurveysOn, ISNULL(InteractiveMap,-1) InteractiveMap, ISNULL(Leaderboard,-1) Leaderboard, ISNULL(Bookmarking,-1) Bookmarking, ISNULL(Photofeed,-1) Photofeed, ISNULL(AttendeesList,-1) AttendeesList, ISNULL(QRCode,-1) QRCode, ISNULL(ExhibitorReqInfo,-1) ExhibitorReqInfo, ISNULL(ExhibitorMsg,-1) ExhibitorMsg, ISNULL(PrivateMsging,-1) PrivateMsging, ISNULL(PeopleMatching,-1) PeopleMatching, ISNULL(SocialNetworks,-1) SocialNetworks, ISNULL(RatingsOn,-1) RatingsOn,
 ISNULL(BinaryVersion,'v???') BinaryVersion, ISNULL(DeviceType,'???') DeviceType, ISNULL(Device,'???') Device, ISNULL(Facebook,0) Facebook, ISNULL(Twitter,0) Twitter, ISNULL(LinkedIn,0) LinkedIn, GlobalUserId, U.UserId,
