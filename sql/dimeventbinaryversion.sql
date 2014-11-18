@@ -2,7 +2,7 @@ IF OBJECT_ID('ReportingDB.dbo.DimEventBinaryVersion','U') IS NOT NULL
   DROP TABLE ReportingDB.dbo.DimEventBinaryVersion
 
 --===============================================================================================================================================
--- Per Application, identify the Binary Version by performing a calculation from the Application IDs and Binary Versions in UserCubeSummary. 
+-- Per Application, identify the Binary Version by checking which version is most common from the User data.  
 -- * Upstream dependency on UserCubeSummary. 
 --===============================================================================================================================================
 
