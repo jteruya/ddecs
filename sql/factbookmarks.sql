@@ -1,6 +1,14 @@
 IF OBJECT_ID('ReportingDB.dbo.FactBookmarks','U') IS NOT NULL
   DROP TABLE ReportingDB.dbo.FactBookmarks
 
+--===================================================================================================
+-- Source on User Favorites Fact table and enforces that each favorite is tied to an identified user. 
+-- * Upstream dependency on DimUsers.
+--
+-- Minor transformations:
+-- 1. Translation of numeric code to string value. 
+--===================================================================================================
+
 SELECT DISTINCT S.Created Timestamp, S.ApplicationId, GlobalUserId, S.UserId,
 CASE
   WHEN ListTypeId = 0 THEN 'Unspecified'
