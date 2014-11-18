@@ -1,6 +1,15 @@
 IF OBJECT_ID('ReportingDB.dbo.FactPosts') IS NOT NULL
   DROP TABLE ReportingDB.dbo.FactPosts
 
+--===================================================================================================
+-- Source on User Check-In Fact table and enforces that each Post is tied to an identified user. 
+-- * Upstream dependency on DimUsers.
+--
+-- Minor transformations:
+-- 1. List Type translated from numeric code to string value. List Type originates from Items/Topics.
+-- 2. Flag to check if user has Image related to the post. 
+--===================================================================================================
+
 SELECT DISTINCT S.Created Timestamp, S.ApplicationId, GlobalUserId, S.UserId,
 CASE
   WHEN ListTypeId = 0 THEN 'Unspecified'
