@@ -1,6 +1,15 @@
 IF OBJECT_ID('ReportingDB.dbo.FactComments','U') IS NOT NULL
   DROP TABLE ReportingDB.dbo.FactComments
 
+--===================================================================================================
+-- Source on User Comments Fact table and enforces that each comment is tied to an identified user. 
+-- * Upstream dependency on DimUsers.
+--
+-- Minor transformations:
+-- 1. Translation of numeric code to string value. 
+-- 2. Flag Indicator for Image related to the post. 
+--===================================================================================================
+
 SELECT DISTINCT S.Created Timestamp, P.ApplicationId, GlobalUserId, S.UserId,
 CASE
   WHEN ListTypeId = 0 THEN 'Unspecified'
