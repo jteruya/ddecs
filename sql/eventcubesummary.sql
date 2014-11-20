@@ -1,6 +1,11 @@
 IF OBJECT_ID('ReportingDB.dbo.EventCubeSummary','U') IS NOT NULL
   DROP TABLE ReportingDB.dbo.EventCubeSummary
 
+--==========================================================
+-- Aggregation on the User Cube Summary at the Event level
+-- * Upstream dependency on User Cube Summary
+--==========================================================
+
 SELECT S.ApplicationId, Name, StartDate, EndDate,
 OpenEvent, LeadScanning, SurveysOn, InteractiveMap, Leaderboard, Bookmarking, Photofeed, AttendeesList, QRCode, ExhibitorReqInfo, ExhibitorMsg, PrivateMsging, PeopleMatching, SocialNetworks, RatingsOn,
 BinaryVersion,

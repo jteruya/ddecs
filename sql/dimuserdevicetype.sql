@@ -1,6 +1,12 @@
 IF OBJECT_ID('ReportingDB.dbo.DimUserDeviceType','U') IS NOT NULL
   DROP TABLE ReportingDB.dbo.DimUserDeviceType
 
+--===================================================================================
+-- Per User ID, identifies the most common Device Type used across all sessions. 
+-- Should no version be identified, defaults to "???".
+-- * Upstream dependency on DimUsers.
+--===================================================================================
+
 SELECT UserId, CASE WHEN Device IN ('iPhone','iPad') THEN 'iOS' WHEN Device = 'Android' THEN 'Android' ELSE 'Other' END DeviceType, Device
 INTO ReportingDB.dbo.DimUserDeviceType
 FROM

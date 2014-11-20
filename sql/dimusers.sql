@@ -1,6 +1,27 @@
 IF OBJECT_ID('ReportingDB.dbo.TempDimUsers') IS NOT NULL
   DROP TABLE ReportingDB.dbo.TempDimUsers
 
+--================================================================================================================
+-- Create an initial Temporary set of User Dimension data that will be standardized/aggregated from fact data. 
+-- The data is collected across:
+-- 1. Sessions
+-- 2. User Check Ins
+-- 3. User Likes
+-- 4. User Comments
+-- 5. User Favorites
+-- 6. Trust
+-- 7. Show Ups
+-- 8. Survey Responses
+--
+-- This temporary dataset is then transformed in the following ways to create the User Dimension data:
+-- A. Identify the Global User ID via IS_USER
+-- B. Filter out the Test Event users
+-- C. Filter the fact data that is older than May 16, 2013. 
+-- D. Filter out any records without a Global User ID
+-- E. Filter out any User IDs where the User ID is tied to more than one Application ID. 
+-- F. Filter out any User ID of value 0
+--================================================================================================================
+
 SELECT MIN(FirstTimestamp) FirstTimestamp, MAX(LastTimestamp) LastTimestamp, F.ApplicationId, GlobalUserId, F.UserId
 INTO ReportingDB.dbo.TempDimUsers
 FROM

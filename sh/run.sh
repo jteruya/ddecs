@@ -28,6 +28,8 @@ echo `date` running dimuserdevicetype.sql; $get_csv $wd"dimusersocialnetworks.sq
 # Event attributes
 echo `date` running dimeventbinaryversion.sql; $get_csv $wd"dimeventbinaryversion.sql" no_output
 echo `date` running dimevents.sql; $get_csv $wd"dimevents.sql" no_output
+echo `date` running dimitems.sql; $get_csv $wd"dimitems.sql" no_output
+echo `date` running dimsurveys.sql; $get_csv $wd"dimsurveys.sql" no_output
 
 # Da cubes
 echo `date` running usercubesummary.sql; $get_csv $wd"usercubesummary.sql" no_output

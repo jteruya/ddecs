@@ -1,6 +1,10 @@
 IF OBJECT_ID('ReportingDB.dbo.DimUserSocialNetworks','U') IS NOT NULL
   DROP TABLE ReportingDB.dbo.DimUserSocialNetworks
 
+--=========================================================================================================================
+-- Per User, identifies the authorizations performed per separate 3rd party social networks and flags per each identified. 
+--=========================================================================================================================
+
 SELECT U.UserId,
 MAX(CASE WHEN OAuthPartnerId = 1 THEN 1 ELSE 0 END) Facebook,
 MAX(CASE WHEN OAuthPartnerId = 2 THEN 1 ELSE 0 END) Twitter,

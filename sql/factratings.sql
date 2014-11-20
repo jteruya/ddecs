@@ -1,6 +1,15 @@
 IF OBJECT_ID('ReportingDB.dbo.FactRatings','U') IS NOT NULL
   DROP TABLE ReportingDB.dbo.FactRatings
 
+--===================================================================================================
+-- Source on User Ratings Fact table and enforces that each rating is tied to an identified user. 
+-- * Upstream dependency on DimUsers.
+--
+-- Minor transformations:
+-- 1. Translation of numeric code to string value. 
+-- 2. Flag inidcator Review Comment is tied to rating. 
+--===================================================================================================
+
 SELECT DISTINCT S.DateEntered Timestamp, S.ApplicationId, GlobalUserId, S.UserId,
 CASE
   WHEN ListTypeId = 0 THEN 'Unspecified'

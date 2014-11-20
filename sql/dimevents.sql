@@ -1,6 +1,19 @@
 IF OBJECT_ID('ReportingDB.dbo.DimEvents','U') IS NOT NULL
   DROP TABLE ReportingDB.dbo.DimEvents
 
+--===============================================================================================
+-- Base data on the Application source records. 
+-- * Upstream dependency on DimUsers. 
+--
+-- The following conditions are applied:
+-- 1. Application must be related to a identified User (in the Dimension table)
+--
+-- The main transformations are flag indicator fields from the following:
+-- 1. Application configuration grid items
+-- 2. Application configuration settings
+-- The above flagging transformations are handled differently depending on source table logic. 
+--===============================================================================================
+
 SELECT DISTINCT A.ApplicationId, dbo.STRIP_STRING(A.Name) Name,
 
 CAST(StartDate AS DATE) StartDate,

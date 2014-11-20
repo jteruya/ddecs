@@ -1,6 +1,15 @@
 IF OBJECT_ID('ReportingDB.dbo.FactCheckIns','U') IS NOT NULL
   DROP TABLE ReportingDB.dbo.FactCheckIns
 
+--======================================================
+-- Base set of Check-Ins from Ratings. 
+-- * Upstream dependency on DimUsers
+--
+-- Minor transformations:
+-- 1. Translation of numeric codes to string values.
+-- 2. Additional joins for identifying flag indicators. 
+--======================================================
+
 SELECT DISTINCT S.Created Timestamp, S.ApplicationId, GlobalUserId, S.UserId,
 CASE
   WHEN ListTypeId = 0 THEN 'Unspecified'
