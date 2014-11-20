@@ -4,7 +4,7 @@ IF OBJECT_ID('ReportingDB.dbo.EventCubeSummary','U') IS NOT NULL
 SELECT S.ApplicationId, Name, StartDate, EndDate,
 OpenEvent, LeadScanning, SurveysOn, InteractiveMap, Leaderboard, Bookmarking, Photofeed, AttendeesList, QRCode, ExhibitorReqInfo, ExhibitorMsg, PrivateMsging, PeopleMatching, SocialNetworks, RatingsOn,
 BinaryVersion,
-Users, UsersActive, UsersFacebook, UsersTwitter, UsersLinkedIn, Sessions, Posts, PostsImage, PostsItem, Likes, Comments, Bookmarks, Follows, CheckIns, Ratings, Reviews, Surveys,
+ISNULL(Registrants,0) Registrants, ISNULL(Downloads,0) Downloads, Users, UsersActive, UsersFacebook, UsersTwitter, UsersLinkedIn, Sessions, Posts, PostsImage, PostsItem, Likes, Comments, Bookmarks, Follows, CheckIns, CheckInsHeadcount, Ratings, Reviews, Surveys,
 ISNULL(PromotedPosts,0) PromotedPosts, ISNULL(GlobalPushNotifications,0) GlobalPushNotifications
 INTO ReportingDB.dbo.EventCubeSummary
 FROM
