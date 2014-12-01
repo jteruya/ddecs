@@ -10,7 +10,7 @@ IF OBJECT_ID('ReportingDB.dbo.FactCheckIns','U') IS NOT NULL
 -- 2. Additional joins for identifying flag indicators. 
 --======================================================
 
-SELECT DISTINCT S.Created Timestamp, S.ApplicationId, GlobalUserId, S.UserId,
+SELECT DISTINCT S.ShowUpId, S.Created Timestamp, S.ApplicationId, GlobalUserId, S.UserId,
 CASE
   WHEN ListTypeId = 0 THEN 'Unspecified'
   WHEN ListTypeId = 1 THEN 'Regular'
