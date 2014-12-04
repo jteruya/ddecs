@@ -35,5 +35,8 @@ echo `date` running dimsurveys.sql; $get_csv $wd"dimsurveys.sql" no_output
 echo `date` running usercubesummary.sql; $get_csv $wd"usercubesummary.sql" no_output
 echo `date` running eventcubesummary.sql; $get_csv $wd"eventcubesummary.sql" no_output
 
+# User cube by date
+echo `date` running usercubedaily.sql; $get_csv $wd"usercubedaily.sql" no_output
+
 echo `date` finished script...
 

@@ -24,5 +24,5 @@ LEFT OUTER JOIN (SELECT UserId, COUNT(*) Ratings, SUM(HasReview) Reviews FROM Re
 LEFT OUTER JOIN (SELECT UserId, COUNT(*) Surveys FROM ReportingDB.dbo.FactSurveys GROUP BY UserId) V ON U.UserId = V.UserId
 LEFT OUTER JOIN ReportingDB.dbo.DimUserBinaryVersion N ON U.UserId = N.UserId
 LEFT OUTER JOIN ReportingDB.dbo.DimUserDeviceType D ON U.UserId = D.UserId
-LEFT OUTER JOIN ReportingDB.dbo.DimSocialNetworks O ON U.UserId = O.UserId
+LEFT OUTER JOIN ReportingDB.dbo.DimUserSocialNetworks O ON U.UserId = O.UserId
 LEFT OUTER JOIN ReportingDB.dbo.DimEvents E ON U.ApplicationId = E.ApplicationId
