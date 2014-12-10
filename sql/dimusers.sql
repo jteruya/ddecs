@@ -20,11 +20,6 @@ IF OBJECT_ID('ReportingDB.dbo.TempDimUsers') IS NOT NULL
 -- D. Filter out any records without a Global User ID
 -- E. Filter out any User IDs where the User ID is tied to more than one Application ID. 
 -- F. Filter out any User ID of value 0
--- G. Filter out cases where the naming of the App indicates testing: 
---    a. Name contains 'test'
---    b. Name contains 'dext'
---    c. Name contains 'do not use'
---    d. But name does not contain 'testing conference' or 'contest'
 --================================================================================================================
 
 SELECT MIN(FirstTimestamp) FirstTimestamp, MAX(LastTimestamp) LastTimestamp, F.ApplicationId, GlobalUserId, F.UserId
@@ -105,11 +100,13 @@ AND GlobalUserId IS NOT NULL
 AND NOT EXISTS (SELECT 1 FROM (SELECT UserId FROM ReportingDB.dbo.TempDimUsers GROUP BY UserId HAVING COUNT(DISTINCT ApplicationId) > 1) B WHERE U.UserId = B.UserId)
 AND UserId != 0
 
+/*
 AND ApplicationId NOT IN (
 SELECT DISTINCT a.ApplicationId
 FROM ReportingDB.dbo.TempDimUsers a
 JOIN ReportingDB.dbo.DimEvents b ON a.ApplicationId = b.ApplicationId
 WHERE (LOWER(Name) LIKE '%test%' OR LOWER(Name) LIKE '%dext%' OR LOWER(Name) LIKE '%do not use%') AND LOWER(Name) NOT LIKE '%testing conference%' AND LOWER(Name) NOT LIKE '%contest%'
+*/
 )
 
 IF OBJECT_ID('ReportingDB.dbo.TempDimUsers') IS NOT NULL
