@@ -100,6 +100,15 @@ AND GlobalUserId IS NOT NULL
 AND NOT EXISTS (SELECT 1 FROM (SELECT UserId FROM ReportingDB.dbo.TempDimUsers GROUP BY UserId HAVING COUNT(DISTINCT ApplicationId) > 1) B WHERE U.UserId = B.UserId)
 AND UserId != 0
 
+/*
+AND ApplicationId NOT IN (
+SELECT DISTINCT a.ApplicationId
+FROM ReportingDB.dbo.TempDimUsers a
+JOIN ReportingDB.dbo.DimEvents b ON a.ApplicationId = b.ApplicationId
+WHERE (LOWER(Name) LIKE '%test%' OR LOWER(Name) LIKE '%dext%' OR LOWER(Name) LIKE '%do not use%') AND LOWER(Name) NOT LIKE '%testing conference%' AND LOWER(Name) NOT LIKE '%contest%'
+*/
+)
+
 IF OBJECT_ID('ReportingDB.dbo.TempDimUsers') IS NOT NULL
   DROP TABLE ReportingDB.dbo.TempDimUsers
 

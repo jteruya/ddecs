@@ -6,9 +6,11 @@ IF OBJECT_ID('ReportingDB.dbo.UserCubeSummary','U') IS NOT NULL
 -- Creates an aggregate at the User level with Application-level fields for slicing.
 --===================================================================================================
 
-SELECT U.ApplicationId, ISNULL(Name,'???') Name, StartDate, EndDate,
+SELECT U.ApplicationId, ISNULL(Name,'???') Name, 
+CASE WHEN SF.SF_EventStartDate IS NOT NULL THEN SF.SF_EventStartDate ELSE E.StartDate END AS StartDate, 
+CASE WHEN SF.SF_EventEndDate IS NOT NULL THEN SF.SF_EventEndDate ELSE E.EndDate END AS EndDate,
 ISNULL(OpenEvent,-1) OpenEvent, ISNULL(LeadScanning,-1) LeadScanning, ISNULL(SurveysOn,-1) SurveysOn, ISNULL(InteractiveMap,-1) InteractiveMap, ISNULL(Leaderboard,-1) Leaderboard, ISNULL(Bookmarking,-1) Bookmarking, ISNULL(Photofeed,-1) Photofeed, ISNULL(AttendeesList,-1) AttendeesList, ISNULL(QRCode,-1) QRCode, ISNULL(ExhibitorReqInfo,-1) ExhibitorReqInfo, ISNULL(ExhibitorMsg,-1) ExhibitorMsg, ISNULL(PrivateMsging,-1) PrivateMsging, ISNULL(PeopleMatching,-1) PeopleMatching, ISNULL(SocialNetworks,-1) SocialNetworks, ISNULL(RatingsOn,-1) RatingsOn,
-ISNULL(SF.EventType,'_Unknown') EventType, ISNULL(SF.EventSize,'_Unknown') EventSize,
+ISNULL(SF.EventType,'_Unknown') EventType, ISNULL(SF.EventSize,'_Unknown') EventSize, ISNULL(SF.AccountCustomerDomain,'_Unknown') AccountCustomerDomain, ISNULL(SF.ServiceTierName,'_Unknown') ServiceTierName, ISNULL(SF.App365Indicator,'_Unknown') App365Indicator, 
 ISNULL(BinaryVersion,'v???') BinaryVersion, ISNULL(DeviceType,'???') DeviceType, ISNULL(Device,'???') Device, ISNULL(Facebook,0) Facebook, ISNULL(Twitter,0) Twitter, ISNULL(LinkedIn,0) LinkedIn, GlobalUserId, U.UserId,
 CASE WHEN Sessions >= 2 THEN 1 ELSE 0 END Active, CASE WHEN Sessions >= 10 THEN 1 ELSE 0 END Engaged,
 ISNULL(Sessions,0) Sessions, ISNULL(Posts,0) Posts, ISNULL(PostsImage,0) PostsImage, ISNULL(PostsItem,0) PostsItem, ISNULL(Likes,0) Likes, ISNULL(Comments,0) Comments, ISNULL(Bookmarks,0) Bookmarks, ISNULL(Follows,0) Follows, ISNULL(CheckIns,0) CheckIns, ISNULL(CheckInsHeadcount,0) CheckInsHeadcount, ISNULL(Ratings,0) Ratings, ISNULL(Reviews,0) Reviews, ISNULL(Surveys,0) Surveys
