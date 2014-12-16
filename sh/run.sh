@@ -20,6 +20,9 @@ echo `date` running factcheckins.sql; $get_csv $wd"factcheckins.sql" no_output
 echo `date` running factratings.sql; $get_csv $wd"factratings.sql" no_output
 echo `date` running factsurveys.sql; $get_csv $wd"factsurveys.sql" no_output
 
+# Fact sessions for retention
+echo `date` running factsessionsretention.sql; $get_csv $wd"factsessionsretention.sql" no_output
+
 # User attributes
 echo `date` running dimuserbinaryversion.sql; $get_csv $wd"dimuserbinaryversion.sql" no_output
 echo `date` running dimuserdevicetype.sql; $get_csv $wd"dimuserdevicetype.sql" no_output
