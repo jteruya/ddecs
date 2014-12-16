@@ -24,4 +24,5 @@ FROM Ratings.dbo.UserFavorites S
 LEFT OUTER JOIN Ratings.dbo.Item I ON S.ItemId = I.ItemId
 LEFT OUTER JOIN Ratings.dbo.Topic T ON I.ParentTopicId = T.TopicId
 JOIN ReportingDB.dbo.DimUsers U ON S.UserId = U.UserId
+WHERE IsImported = 0
 
