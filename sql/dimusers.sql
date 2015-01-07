@@ -107,7 +107,6 @@ FROM ReportingDB.dbo.TempDimUsers a
 JOIN ReportingDB.dbo.DimEvents b ON a.ApplicationId = b.ApplicationId
 WHERE (LOWER(Name) LIKE '%test%' OR LOWER(Name) LIKE '%dext%' OR LOWER(Name) LIKE '%do not use%') AND LOWER(Name) NOT LIKE '%testing conference%' AND LOWER(Name) NOT LIKE '%contest%'
 */
-)
 
 IF OBJECT_ID('ReportingDB.dbo.TempDimUsers') IS NOT NULL
   DROP TABLE ReportingDB.dbo.TempDimUsers
