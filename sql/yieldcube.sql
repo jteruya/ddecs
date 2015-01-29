@@ -1,3 +1,5 @@
+-- Experimental, for DOMO
+
 IF OBJECT_ID('ReportingDB.dbo.YieldCube','U') IS NOT NULL
   DROP TABLE ReportingDB.dbo.YieldCube
 
