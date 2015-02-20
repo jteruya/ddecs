@@ -29,6 +29,7 @@ FROM
 LEFT OUTER JOIN
 ( SELECT ApplicationId, COUNT(DISTINCT UserId) Registrants
   FROM AuthDB.dbo.IS_Users
+  WHERE IsDisabled = 0
   GROUP BY ApplicationId
 ) R
 ON S.ApplicationId = R.ApplicationId
