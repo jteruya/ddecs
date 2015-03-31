@@ -11,7 +11,7 @@ OpenEvent, LeadScanning, SurveysOn, InteractiveMap, Leaderboard, Bookmarking, Ph
 EventType, EventSize, AccountCustomerDomain, ServiceTierName, App365Indicator, OwnerName,
 BinaryVersion,
 ISNULL(Registrants,0) Registrants, ISNULL(Downloads,0) Downloads, Users, UsersActive, UsersEngaged, UsersFacebook, UsersTwitter, UsersLinkedIn, Sessions, Posts, PostsImage, PostsItem, Likes, Comments, Bookmarks, Follows, CheckIns, CheckInsHeadcount, Ratings, Reviews, Surveys,
-ISNULL(PromotedPosts,0) PromotedPosts, ISNULL(GlobalPushNotifications,0) GlobalPushNotifications
+ISNULL(PromotedPosts,0) PromotedPosts, ISNULL(GlobalPushNotifications,0) GlobalPushNotifications, A.Adoption
 INTO ReportingDB.dbo.EventCubeSummary
 FROM
 ( SELECT S.ApplicationId, Name, StartDate, EndDate,
@@ -51,4 +51,28 @@ LEFT OUTER JOIN
   GROUP BY ApplicationId
 ) G
 ON S.ApplicationId = G.ApplicationId
+LEFT OUTER JOIN
+( SELECT ApplicationId, round(1.0 * SUM(User_Ind)/COUNT(*),2) * 100 AS Adoption, 
+  CASE WHEN COUNT(*) < SUM(User_Ind) THEN 1 ELSE 0 END AS Error_Ind
+  FROM (
+  SELECT 
+  base.UserId,
+  ecs.ApplicationId,
+  CASE WHEN s.UserId IS NOT NULL THEN 1 ELSE 0 END AS User_Ind
+  FROM AuthDB.dbo.IS_Users base
+  JOIN ReportingDB.dbo.EventCubeSummary ecs ON base.ApplicationId = ecs.ApplicationId
+  LEFT JOIN (SELECT DISTINCT ApplicationId, UserId FROM AnalyticsDB.dbo.Sessions) s ON CAST(base.UserId AS INT) = s.UserId AND base.ApplicationId = s.ApplicationId
+  WHERE base.IsDisabled = 0
+  ) t 
+  GROUP BY ApplicationId
+) A  
+ON S.ApplicationId = A.ApplicationId
+
+
+
+
+
+
+
+
 
