@@ -11,7 +11,7 @@ OpenEvent, LeadScanning, SurveysOn, InteractiveMap, Leaderboard, Bookmarking, Ph
 EventType, EventSize, AccountCustomerDomain, ServiceTierName, App365Indicator, OwnerName,
 BinaryVersion,
 ISNULL(Registrants,0) Registrants, ISNULL(Downloads,0) Downloads, Users, UsersActive, UsersEngaged, UsersFacebook, UsersTwitter, UsersLinkedIn, Sessions, Posts, PostsImage, PostsItem, Likes, Comments, Bookmarks, Follows, CheckIns, CheckInsHeadcount, Ratings, Reviews, Surveys,
-ISNULL(PromotedPosts,0) PromotedPosts, ISNULL(GlobalPushNotifications,0) GlobalPushNotifications, A.Adoption
+ISNULL(PromotedPosts,0) PromotedPosts, ISNULL(GlobalPushNotifications,0) GlobalPushNotifications, ISNULL(Adoption,0.0) Adoption
 INTO ReportingDB.dbo.EventCubeSummary
 FROM
 ( SELECT S.ApplicationId, Name, StartDate, EndDate,
@@ -52,27 +52,20 @@ LEFT OUTER JOIN
 ) G
 ON S.ApplicationId = G.ApplicationId
 LEFT OUTER JOIN
-( SELECT ApplicationId, round(1.0 * SUM(User_Ind)/COUNT(*),2) * 100 AS Adoption, 
-  CASE WHEN COUNT(*) < SUM(User_Ind) THEN 1 ELSE 0 END AS Error_Ind
-  FROM (
-  SELECT 
-  base.UserId,
-  ecs.ApplicationId,
-  CASE WHEN s.UserId IS NOT NULL THEN 1 ELSE 0 END AS User_Ind
-  FROM AuthDB.dbo.IS_Users base
-  JOIN ReportingDB.dbo.EventCubeSummary ecs ON base.ApplicationId = ecs.ApplicationId
-  LEFT JOIN (SELECT DISTINCT ApplicationId, UserId FROM AnalyticsDB.dbo.Sessions) s ON CAST(base.UserId AS INT) = s.UserId AND base.ApplicationId = s.ApplicationId
-  WHERE base.IsDisabled = 0
-  ) t 
-  GROUP BY ApplicationId
-) A  
-ON S.ApplicationId = A.ApplicationId
-
-
-
-
-
-
-
-
-
+( SELECT U.ApplicationId,
+  1.0*SUM(CASE WHEN S.ApplicationId IS NOT NULL AND S.UserId IS NOT NULL THEN 1 ELSE 0 END)/COUNT(*) Adoption
+  FROM
+  ( SELECT DISTINCT U.ApplicationId, UserId
+    FROM AuthDB.dbo.IS_Users U
+    JOIN (SELECT DISTINCT ApplicationId FROM AuthDB.dbo.Applications WHERE CanRegister = 0) E
+    ON U.ApplicationId = E.ApplicationId
+    WHERE IsDisabled = 0
+  ) U
+  LEFT OUTER JOIN
+  ( SELECT DISTINCT ApplicationId, UserId
+    FROM AnalyticsDB.dbo.Sessions
+  ) S
+  ON U.ApplicationId = S.ApplicationId AND U.UserId = S.UserId
+  GROUP BY U.ApplicationId
+) ADOPTION_FOOL
+ON S.ApplicationId = ADOPTION_FOOL.ApplicationId
