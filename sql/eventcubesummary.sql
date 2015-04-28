@@ -11,7 +11,7 @@ OpenEvent, LeadScanning, SurveysOn, InteractiveMap, Leaderboard, Bookmarking, Ph
 EventType, EventSize, AccountCustomerDomain, ServiceTierName, App365Indicator, OwnerName,
 BinaryVersion,
 ISNULL(Registrants,0) Registrants, ISNULL(Downloads,0) Downloads, Users, UsersActive, UsersEngaged, UsersFacebook, UsersTwitter, UsersLinkedIn, Sessions, Posts, PostsImage, PostsItem, Likes, Comments, Bookmarks, Follows, CheckIns, CheckInsHeadcount, Ratings, Reviews, Surveys,
-ISNULL(PromotedPosts,0) PromotedPosts, ISNULL(GlobalPushNotifications,0) GlobalPushNotifications, A.Adoption
+ISNULL(PromotedPosts,0) PromotedPosts, ISNULL(GlobalPushNotifications,0) GlobalPushNotifications, A.Adoption, E.Exhibitors
 INTO ReportingDB.dbo.EventCubeSummary
 FROM
 ( SELECT S.ApplicationId, Name, StartDate, EndDate,
@@ -67,12 +67,14 @@ LEFT OUTER JOIN
   GROUP BY ApplicationId
 ) A  
 ON S.ApplicationId = A.ApplicationId
-
-
-
-
-
-
-
-
-
+LEFT OUTER JOIN
+( SELECT i.applicationid ApplicationId, COUNT(DISTINCT itemid) Exhibitors
+  FROM ratings.dbo.item i
+  JOIN ratings.dbo.topic t ON i.parenttopicid = t.topicid
+  WHERE listtypeid = 3 AND i.isdisabled = 0 AND IsArchived = 'false'
+  GROUP BY i.applicationid
+) E
+ON E.ApplicationId = S.ApplicationId
+ 
+ 
+ 
