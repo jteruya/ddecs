@@ -11,7 +11,7 @@ OpenEvent, LeadScanning, SurveysOn, InteractiveMap, Leaderboard, Bookmarking, Ph
 EventType, EventSize, AccountCustomerDomain, ServiceTierName, App365Indicator, OwnerName,
 BinaryVersion,
 ISNULL(Registrants,0) Registrants, ISNULL(Downloads,0) Downloads, Users, UsersActive, UsersEngaged, UsersFacebook, UsersTwitter, UsersLinkedIn, Sessions, Posts, PostsImage, PostsItem, Likes, Comments, Bookmarks, Follows, CheckIns, CheckInsHeadcount, Ratings, Reviews, Surveys,
-ISNULL(PromotedPosts,0) PromotedPosts, ISNULL(GlobalPushNotifications,0) GlobalPushNotifications, A.Adoption, E.Exhibitors
+ISNULL(PromotedPosts,0) PromotedPosts, ISNULL(GlobalPushNotifications,0) GlobalPushNotifications, A.Adoption, E.Exhibitors, PC.Polls, PR.PollResponses
 INTO ReportingDB.dbo.EventCubeSummary
 FROM
 ( SELECT S.ApplicationId, Name, StartDate, EndDate,
@@ -75,6 +75,23 @@ LEFT OUTER JOIN
   GROUP BY i.applicationid
 ) E
 ON E.ApplicationId = S.ApplicationId
- 
- 
- 
+LEFT OUTER JOIN
+(
+SELECT S.ApplicationId, 1.0 * count(S.ApplicationId) Polls 
+FROM Ratings.dbo.Surveys S 
+WHERE S.IsPoll = 'true'
+GROUP BY S.ApplicationId
+) PC
+ON PC.ApplicationId = S.ApplicationId
+LEFT OUTER JOIN
+(
+SELECT s.ApplicationId, 1.0 * COUNT(sr.SurveyResponseId) PollResponses
+FROM Ratings.dbo.SurveyResponses sr
+JOIN Ratings.dbo.SurveyQuestions sq ON sr.SurveyQuestionId = sq.SurveyQuestionId
+JOIN Ratings.dbo.Surveys s ON sq.SurveyId = s.SurveyId
+WHERE s.IsPoll = 'true'
+GROUP BY s.ApplicationId
+) PR
+ON PR.ApplicationId = S.ApplicationId
+
+
