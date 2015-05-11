@@ -11,7 +11,7 @@ OpenEvent, LeadScanning, SurveysOn, InteractiveMap, Leaderboard, Bookmarking, Ph
 EventType, EventSize, AccountCustomerDomain, ServiceTierName, App365Indicator, OwnerName,
 BinaryVersion,
 ISNULL(Registrants,0) Registrants, ISNULL(Downloads,0) Downloads, Users, UsersActive, UsersEngaged, UsersFacebook, UsersTwitter, UsersLinkedIn, Sessions, Posts, PostsImage, PostsItem, Likes, Comments, Bookmarks, Follows, CheckIns, CheckInsHeadcount, Ratings, Reviews, Surveys,
-ISNULL(PromotedPosts,0) PromotedPosts, ISNULL(GlobalPushNotifications,0) GlobalPushNotifications, A.Adoption, E.Exhibitors, PC.Polls, PR.PollResponses
+ISNULL(PromotedPosts,0) PromotedPosts, ISNULL(GlobalPushNotifications,0) GlobalPushNotifications, ISNULL(A.Adoption,0) Adoption, ISNULL(E.Exhibitors,0) Exhibitors, ISNULL(PC.Polls,0) Polls, ISNULL(PR.PollResponses,0) PollResponses
 INTO ReportingDB.dbo.EventCubeSummary
 FROM
 ( SELECT S.ApplicationId, Name, StartDate, EndDate,
