@@ -11,8 +11,8 @@ OpenEvent, LeadScanning, SurveysOn, InteractiveMap, Leaderboard, Bookmarking, Ph
 EventType, EventSize, AccountCustomerDomain, ServiceTierName, App365Indicator, OwnerName,
 BinaryVersion,
 ISNULL(Registrants,0) Registrants, ISNULL(Downloads,0) Downloads, Users, UsersActive, UsersEngaged, UsersFacebook, UsersTwitter, UsersLinkedIn, Sessions, Posts, PostsImage, PostsItem, Likes, Comments, Bookmarks, Follows, CheckIns, CheckInsHeadcount, Ratings, Reviews, Surveys,
-ISNULL(PromotedPosts,0) PromotedPosts, ISNULL(GlobalPushNotifications,0) GlobalPushNotifications, ISNULL(Adoption,0.0) Adoption
-INTO ReportingDB.dbo.EventCubeSummary
+ISNULL(PromotedPosts,0) PromotedPosts, ISNULL(GlobalPushNotifications,0) GlobalPushNotifications, ISNULL(ADOPTION_FOOL.Adoption,0) Adoption, ISNULL(E.Exhibitors,0) Exhibitors, ISNULL(PC.Polls,0) Polls, ISNULL(PR.PollResponses,0) PollResponses
+--INTO ReportingDB.dbo.EventCubeSummary
 FROM
 ( SELECT S.ApplicationId, Name, StartDate, EndDate,
   OpenEvent, LeadScanning, SurveysOn, InteractiveMap, Leaderboard, Bookmarking, Photofeed, AttendeesList, QRCode, ExhibitorReqInfo, ExhibitorMsg, PrivateMsging, PeopleMatching, SocialNetworks, RatingsOn,
@@ -69,3 +69,29 @@ LEFT OUTER JOIN
   GROUP BY U.ApplicationId
 ) ADOPTION_FOOL
 ON S.ApplicationId = ADOPTION_FOOL.ApplicationId
+LEFT OUTER JOIN
+( SELECT i.applicationid ApplicationId, COUNT(DISTINCT itemid) Exhibitors
+  FROM ratings.dbo.item i
+  JOIN ratings.dbo.topic t ON i.parenttopicid = t.topicid
+  WHERE listtypeid = 3 AND i.isdisabled = 0 AND IsArchived = 'false'
+  GROUP BY i.applicationid
+) E
+ON E.ApplicationId = S.ApplicationId
+LEFT OUTER JOIN
+(
+SELECT S.ApplicationId, 1.0 * count(S.ApplicationId) Polls 
+FROM Ratings.dbo.Surveys S 
+WHERE S.IsPoll = 'true'
+GROUP BY S.ApplicationId
+) PC
+ON PC.ApplicationId = S.ApplicationId
+LEFT OUTER JOIN
+(
+SELECT s.ApplicationId, 1.0 * COUNT(sr.SurveyResponseId) PollResponses
+FROM Ratings.dbo.SurveyResponses sr
+JOIN Ratings.dbo.SurveyQuestions sq ON sr.SurveyQuestionId = sq.SurveyQuestionId
+JOIN Ratings.dbo.Surveys s ON sq.SurveyId = s.SurveyId
+WHERE s.IsPoll = 'true'
+GROUP BY s.ApplicationId
+) PR
+ON PR.ApplicationId = S.ApplicationId
