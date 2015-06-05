@@ -26,10 +26,11 @@ FROM
   EventType, EventSize, AccountCustomerDomain, ServiceTierName, App365Indicator, OwnerName, B.BinaryVersion
 ) S
 LEFT OUTER JOIN
-( SELECT ApplicationId, COUNT(DISTINCT UserId) Registrants
-  FROM AuthDB.dbo.IS_Users
-  WHERE IsDisabled = 0 AND CanRegister = 0
-  GROUP BY ApplicationId
+( SELECT U.ApplicationId, COUNT(DISTINCT U.UserId) Registrants
+  FROM AuthDB.dbo.IS_Users U
+  JOIN AuthDB.dbo.Applications A ON U.ApplicationId = A.ApplicationId
+  WHERE U.IsDisabled = 0 AND A.CanRegister = 0
+  GROUP BY U.ApplicationId
 ) R
 ON S.ApplicationId = R.ApplicationId
 LEFT OUTER JOIN
