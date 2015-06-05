@@ -9,10 +9,9 @@ IF OBJECT_ID('ReportingDB.dbo.EventCubeSummary','U') IS NOT NULL
 SELECT S.ApplicationId, Name, StartDate, EndDate,
 OpenEvent, LeadScanning, SurveysOn, InteractiveMap, Leaderboard, Bookmarking, Photofeed, AttendeesList, QRCode, ExhibitorReqInfo, ExhibitorMsg, PrivateMsging, PeopleMatching, SocialNetworks, RatingsOn,
 EventType, EventSize, AccountCustomerDomain, ServiceTierName, App365Indicator, OwnerName,
-BinaryVersion,
-ISNULL(Registrants,0) Registrants, ISNULL(Downloads,0) Downloads, Users, UsersActive, UsersEngaged, UsersFacebook, UsersTwitter, UsersLinkedIn, Sessions, Posts, PostsImage, PostsItem, Likes, Comments, Bookmarks, Follows, CheckIns, CheckInsHeadcount, Ratings, Reviews, Surveys,
-ISNULL(PromotedPosts,0) PromotedPosts, ISNULL(GlobalPushNotifications,0) GlobalPushNotifications, ISNULL(ADOPTION_FOOL.Adoption,0) Adoption, ISNULL(E.Exhibitors,0) Exhibitors, ISNULL(PC.Polls,0) Polls, ISNULL(PR.PollResponses,0) PollResponses
---INTO ReportingDB.dbo.EventCubeSummary
+BinaryVersion, Registrants, ISNULL(Downloads,0) Downloads, Users, UsersActive, UsersEngaged, UsersFacebook, UsersTwitter, UsersLinkedIn, Sessions, Posts, PostsImage, PostsItem, Likes, Comments, Bookmarks, Follows, CheckIns, CheckInsHeadcount, Ratings, Reviews, Surveys,
+ISNULL(PromotedPosts,0) PromotedPosts, ISNULL(GlobalPushNotifications,0) GlobalPushNotifications, ADOPTION_FOOL.Adoption, ISNULL(E.Exhibitors,0) Exhibitors, ISNULL(PC.Polls,0) Polls, ISNULL(PR.PollResponses,0) PollResponses
+INTO ReportingDB.dbo.EventCubeSummary
 FROM
 ( SELECT S.ApplicationId, Name, StartDate, EndDate,
   OpenEvent, LeadScanning, SurveysOn, InteractiveMap, Leaderboard, Bookmarking, Photofeed, AttendeesList, QRCode, ExhibitorReqInfo, ExhibitorMsg, PrivateMsging, PeopleMatching, SocialNetworks, RatingsOn,
@@ -29,7 +28,7 @@ FROM
 LEFT OUTER JOIN
 ( SELECT ApplicationId, COUNT(DISTINCT UserId) Registrants
   FROM AuthDB.dbo.IS_Users
-  WHERE IsDisabled = 0
+  WHERE IsDisabled = 0 AND CanRegister = 0
   GROUP BY ApplicationId
 ) R
 ON S.ApplicationId = R.ApplicationId
@@ -78,20 +77,18 @@ LEFT OUTER JOIN
 ) E
 ON E.ApplicationId = S.ApplicationId
 LEFT OUTER JOIN
-(
-SELECT S.ApplicationId, 1.0 * count(S.ApplicationId) Polls 
-FROM Ratings.dbo.Surveys S 
-WHERE S.IsPoll = 'true'
-GROUP BY S.ApplicationId
+( SELECT S.ApplicationId, 1.0 * count(S.ApplicationId) Polls 
+  FROM Ratings.dbo.Surveys S 
+  WHERE S.IsPoll = 'true'
+  GROUP BY S.ApplicationId
 ) PC
 ON PC.ApplicationId = S.ApplicationId
 LEFT OUTER JOIN
-(
-SELECT s.ApplicationId, 1.0 * COUNT(sr.SurveyResponseId) PollResponses
-FROM Ratings.dbo.SurveyResponses sr
-JOIN Ratings.dbo.SurveyQuestions sq ON sr.SurveyQuestionId = sq.SurveyQuestionId
-JOIN Ratings.dbo.Surveys s ON sq.SurveyId = s.SurveyId
-WHERE s.IsPoll = 'true'
-GROUP BY s.ApplicationId
+( SELECT s.ApplicationId, 1.0 * COUNT(sr.SurveyResponseId) PollResponses
+  FROM Ratings.dbo.SurveyResponses sr
+  JOIN Ratings.dbo.SurveyQuestions sq ON sr.SurveyQuestionId = sq.SurveyQuestionId
+  JOIN Ratings.dbo.Surveys s ON sq.SurveyId = s.SurveyId
+  WHERE s.IsPoll = 'true'
+  GROUP BY s.ApplicationId
 ) PR
 ON PR.ApplicationId = S.ApplicationId

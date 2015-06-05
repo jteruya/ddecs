@@ -21,8 +21,8 @@ echo `date` running factratings.sql; $get_csv $wd"factratings.sql" no_output
 echo `date` running factsurveys.sql; $get_csv $wd"factsurveys.sql" no_output
 
 # Experimental cubes
-echo `date` running factsessionsretention.sql; $get_csv $wd"factsessionsretention.sql" no_output
-echo `date` running yieldcube.sql; $get_csv $wd"yieldcube.sql" no_output
+# echo `date` running factsessionsretention.sql; $get_csv $wd"factsessionsretention.sql" no_output
+# echo `date` running yieldcube.sql; $get_csv $wd"yieldcube.sql" no_output
 
 # User attributes
 echo `date` running dimuserbinaryversion.sql; $get_csv $wd"dimuserbinaryversion.sql" no_output
@@ -41,7 +41,7 @@ echo `date` running usercubesummary.sql; $get_csv $wd"usercubesummary.sql" no_ou
 echo `date` running eventcubesummary.sql; $get_csv $wd"eventcubesummary.sql" no_output
 
 # User cube by date
-echo `date` running usercubedaily.sql; $get_csv $wd"usercubedaily.sql" no_output
+# echo `date` running usercubedaily.sql; $get_csv $wd"usercubedaily.sql" no_output
 
 echo `date` finished script...
 

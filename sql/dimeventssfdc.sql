@@ -16,6 +16,6 @@ LAST_VALUE(sf_Event_Date__c) OVER (PARTITION BY sf_Event_Id_CMS__c ORDER BY CAST
 LAST_VALUE(sf_Event_End_Date__c) OVER (PARTITION BY sf_Event_Id_CMS__c ORDER BY CAST(sf_LastModifiedDate AS DATETIME) ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) SF_EventEndDate,
 LAST_VALUE(sf_Owner_Name__c) OVER (PARTITION BY sf_Event_Id_CMS__c ORDER BY CAST(sf_LastModifiedDate AS DATETIME) ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) SF_OwnerName
 INTO ReportingDB.dbo.DimEventsSFDC
-FROM ReportingDB.dbo.Implementation__c
-WHERE LEN(sf_Event_Id_CMS__c) = 36;
-
+FROM ReportingDB.dbo.Implementation__c WHERE 1=1
+AND LEN(sf_Event_Id_CMS__c) = 36
+AND LEN(sf_Event_Id_CMS__c) - LEN(REPLACE(sf_Event_Id_CMS__c,'-','')) = 4 
