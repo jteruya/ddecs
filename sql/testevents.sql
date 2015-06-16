@@ -8,7 +8,7 @@ FROM
 -- Identify the Test Events through two methods:
 -- 1a. Identify if the naming of the Event has anything to do with a DoubleDutch test/internal/QA Event
 -- 1b. Identify if the specific Bundle Unique ID is tied to a test event (as specified by internal users)
--- 2.  Check if the Event has 20 or fewer Users across all Event sessions. 
+-- 2.  Check if the Event has 20 or fewer Users across all Event sessions (or no Event sessions at all)
 --============================================================================================================
 ( SELECT DISTINCT ApplicationId, dbo.STRIP_STRING(A.Name) Name
   FROM AuthDB.dbo.Applications A
@@ -24,10 +24,10 @@ FROM
   UNION
   
   -- 2 --
-  SELECT S.ApplicationId, dbo.STRIP_STRING(Name) Name
-  FROM AnalyticsDB.dbo.Sessions S
-  JOIN AuthDB.dbo.Applications A ON S.ApplicationId = A.ApplicationId
-  GROUP BY S.ApplicationId, dbo.STRIP_STRING(Name)
+  SELECT A.ApplicationId, dbo.STRIP_STRING(Name) Name
+  FROM AuthDB.dbo.Applications A
+  LEFT JOIN AnalyticsDB.dbo.Sessions S ON S.ApplicationId = A.ApplicationId
+  GROUP BY A.ApplicationId, dbo.STRIP_STRING(Name)
   HAVING COUNT(DISTINCT UserId) <= 20
 ) S
 
