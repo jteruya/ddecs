@@ -22,20 +22,9 @@ CASE
   WHEN T.ListTypeId = 4 THEN 'Speakers'
   WHEN T.ListTypeId = 5 THEN 'File'
   ELSE '???'
-<<<<<<< HEAD
 END ListType, 
 S.ItemId
 FROM PUBLIC.Ratings_UserFavorites S
 LEFT OUTER JOIN PUBLIC.Ratings_Item I ON S.ItemId = I.ItemId
 LEFT OUTER JOIN PUBLIC.Ratings_Topic T ON I.ParentTopicId = T.TopicId
 JOIN EventCube.DimUsers U ON S.UserId = U.UserId;
-=======
-END ListType, S.ItemId
-INTO ReportingDB.dbo.FactBookmarks
-FROM Ratings.dbo.UserFavorites S
-LEFT OUTER JOIN Ratings.dbo.Item I ON S.ItemId = I.ItemId
-LEFT OUTER JOIN Ratings.dbo.Topic T ON I.ParentTopicId = T.TopicId
-JOIN ReportingDB.dbo.DimUsers U ON S.UserId = U.UserId
-WHERE IsImported = 0
-
->>>>>>> upstream/master
