@@ -1,5 +1,4 @@
-IF OBJECT_ID('ReportingDB.dbo.FactRatings','U') IS NOT NULL
-  DROP TABLE ReportingDB.dbo.FactRatings
+DROP TABLE IF EXISTS EventCube.FactRatings;
 
 --===================================================================================================
 -- Source on User Ratings Fact table and enforces that each rating is tied to an identified user. 
@@ -10,20 +9,25 @@ IF OBJECT_ID('ReportingDB.dbo.FactRatings','U') IS NOT NULL
 -- 2. Flag inidcator Review Comment is tied to rating. 
 --===================================================================================================
 
-SELECT DISTINCT S.DateEntered Timestamp, S.ApplicationId, GlobalUserId, S.UserId,
+CREATE TABLE EventCube.FactRatings AS 
+SELECT 
+S.Created AS Timestamp, 
+S.ApplicationId, 
+U.GlobalUserId, 
+S.UserId,
 CASE
-  WHEN ListTypeId = 0 THEN 'Unspecified'
-  WHEN ListTypeId = 1 THEN 'Regular'
-  WHEN ListTypeId = 2 THEN 'Agenda'
-  WHEN ListTypeId = 3 THEN 'Exhibitors'
-  WHEN ListTypeId = 4 THEN 'Speakers'
-  WHEN ListTypeId = 5 THEN 'File'
+  WHEN T.ListTypeId = 0 THEN 'Unspecified'
+  WHEN T.ListTypeId = 1 THEN 'Regular'
+  WHEN T.ListTypeId = 2 THEN 'Agenda'
+  WHEN T.ListTypeId = 3 THEN 'Exhibitors'
+  WHEN T.ListTypeId = 4 THEN 'Speakers'
+  WHEN T.ListTypeId = 5 THEN 'File'
   ELSE '???'
-END ListType, S.ItemId,
-Rating, CASE WHEN Comments != '' AND Comments IS NOT NULL THEN 1 ELSE 0 END HasReview
-INTO ReportingDB.dbo.FactRatings
-FROM Ratings.dbo.ItemRatings S
-LEFT OUTER JOIN Ratings.dbo.Item I ON S.ItemId = I.ItemId
-LEFT OUTER JOIN Ratings.dbo.Topic T ON I.ParentTopicId = T.TopicId
-JOIN ReportingDB.dbo.DimUsers U ON S.UserId = U.UserId
-
+END ListType, 
+S.ItemId,
+S.Rating, 
+CASE WHEN S.Comments != '' AND S.Comments IS NOT NULL THEN 1 ELSE 0 END HasReview
+FROM PUBLIC.Ratings_ItemRatings S
+LEFT OUTER JOIN PUBLIC.Ratings_Item I ON S.ItemId = I.ItemId
+LEFT OUTER JOIN PUBLIC.Ratings_Topic T ON I.ParentTopicId = T.TopicId
+JOIN EventCube.DimUsers U ON S.UserId = U.UserId;

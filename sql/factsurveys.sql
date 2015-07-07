@@ -1,5 +1,4 @@
-IF OBJECT_ID('ReportingDB.dbo.FactSurveys','U') IS NOT NULL
-  DROP TABLE ReportingDB.dbo.FactSurveys
+DROP TABLE IF EXISTS EventCube.FactSurveys;
 
 --===================================================================================================
 -- Source on Survey Responses Fact table and enforces that each rating is tied to an identified user. 
@@ -10,17 +9,22 @@ IF OBJECT_ID('ReportingDB.dbo.FactSurveys','U') IS NOT NULL
 -- 2. Filtered on whether the Survey is considered a Poll
 --===================================================================================================
 
-SELECT DISTINCT R.Created Timestamp, S.ApplicationId, GlobalUserId, R.UserId, Q.SurveyId, Questions
-INTO ReportingDB.dbo.FactSurveys
-FROM Ratings.dbo.SurveyResponses R
-JOIN Ratings.dbo.SurveyQuestions Q ON R.SurveyQuestionId = Q.SurveyQuestionId
-JOIN Ratings.dbo.Surveys S ON Q.SurveyId = S.SurveyId
+CREATE TABLE EventCube.FactSurveys AS 
+SELECT 
+R.Created AS Timestamp, 
+S.ApplicationId, 
+U.GlobalUserId, 
+R.UserId, 
+Q.SurveyId, 
+N.Questions
+FROM PUBLIC.Ratings_SurveyResponses R
+JOIN PUBLIC.Ratings_SurveyQuestions Q ON R.SurveyQuestionId = Q.SurveyQuestionId
+JOIN PUBLIC.Ratings_Surveys S ON Q.SurveyId = S.SurveyId
 LEFT OUTER JOIN
-( SELECT SurveyId, COUNT(*) Questions
-  FROM Ratings.dbo.SurveyQuestions
+( SELECT SurveyId, COUNT(*) AS Questions
+  FROM PUBLIC.Ratings_SurveyQuestions
   GROUP BY SurveyId
 ) N
 ON Q.SurveyId = N.SurveyId
-JOIN ReportingDB.dbo.DimUsers U ON R.UserId = U.UserId
-WHERE IsPoll = 0
-
+JOIN EventCube.DimUsers U ON R.UserId = U.UserId
+WHERE S.IsPoll IS FALSE;

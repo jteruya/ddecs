@@ -2,42 +2,43 @@
 
 echo `date` starting script...
 
-wd="/home/anguyen/eventcube/sql/"
-get_csv="python /home/anguyen/tools/get_csv.py "
+wd=$HOME'/eventcube/sh'
+run_sql="psql -h 10.223.192.6 -p 5432 analytics etl -f "
 
 # Know which events and users to include
-echo `date` running testevents.sql; $get_csv $wd"testevents.sql" no_output
-echo `date` running dimusers.sql; $get_csv $wd"dimusers.sql" no_output
+echo `date` running testevents.sql; $run_sql $wd"/../sql/testevents.sql"
+echo `date` running dimusers.sql; $run_sql $wd"/../sql/dimusers.sql"
 
 # The facts
-echo `date` running factsessions.sql; $get_csv $wd"factsessions.sql" no_output
-echo `date` running factposts.sql; $get_csv $wd"factposts.sql" no_output
-echo `date` running factlikes.sql; $get_csv $wd"factlikes.sql" no_output
-echo `date` running factcomments.sql; $get_csv $wd"factcomments.sql" no_output
-echo `date` running factbookmarks.sql; $get_csv $wd"factbookmarks.sql" no_output
-echo `date` running factfollows.sql; $get_csv $wd"factfollows.sql" no_output
-echo `date` running factcheckins.sql; $get_csv $wd"factcheckins.sql" no_output
-echo `date` running factratings.sql; $get_csv $wd"factratings.sql" no_output
-echo `date` running factsurveys.sql; $get_csv $wd"factsurveys.sql" no_output
+echo `date` running factsessions.sql; $run_sql $wd"/../sql/factsessions.sql"
+echo `date` running factposts.sql; $run_sql $wd"/../sql/factposts.sql" 
+echo `date` running factlikes.sql; $run_sql $wd"/../sql/factlikes.sql" 
+echo `date` running factcomments.sql; $run_sql $wd"/../sql/factcomments.sql" 
+echo `date` running factbookmarks.sql; $run_sql $wd"/../sql/factbookmarks.sql" 
+echo `date` running factfollows.sql; $run_sql $wd"/../sql/factfollows.sql" 
+echo `date` running factcheckins.sql; $run_sql $wd"/../sql/factcheckins.sql" 
+echo `date` running factratings.sql; $run_sql $wd"/../sql/factratings.sql" 
+echo `date` running factsurveys.sql; $run_sql $wd"/../sql/factsurveys.sql" 
 
 # User attributes
-echo `date` running dimuserbinaryversion.sql; $get_csv $wd"dimuserbinaryversion.sql" no_output
-echo `date` running dimuserdevicetype.sql; $get_csv $wd"dimuserdevicetype.sql" no_output
-echo `date` running dimuserdevicetype.sql; $get_csv $wd"dimusersocialnetworks.sql" no_output
+echo `date` running dimuserbinaryversion.sql; $run_sql $wd"/../sql/dimuserbinaryversion.sql" 
+echo `date` running dimuserdevicetype.sql; $run_sql $wd"/../sql/dimuserdevicetype.sql" 
+echo `date` running dimusersocialnetworks.sql; $run_sql $wd"/../sql/dimusersocialnetworks.sql" 
 
 # Event attributes
-echo `date` running dimeventbinaryversion.sql; $get_csv $wd"dimeventbinaryversion.sql" no_output
-echo `date` running dimevents.sql; $get_csv $wd"dimevents.sql" no_output
-echo `date` running dimitems.sql; $get_csv $wd"dimitems.sql" no_output
-echo `date` running dimsurveys.sql; $get_csv $wd"dimsurveys.sql" no_output
-echo `date` running dimeventssfdc.sql; $get_csv $wd"dimeventssfdc.sql" no_output
+echo `date` running dimeventbinaryversion.sql; $run_sql $wd"/../sql/dimeventbinaryversion.sql" 
+echo `date` running dimevents.sql; $run_sql $wd"/../sql/dimevents.sql" 
+echo `date` running dimitems.sql; $run_sql $wd"/../sql/dimitems.sql" 
+echo `date` running dimsurveys.sql; $run_sql $wd"/../sql/dimsurveys.sql" 
+echo `date` running dimeventssfdc.sql; $run_sql $wd"/../sql/dimeventssfdc.sql" 
 
 # Da cubes
-echo `date` running usercubesummary.sql; $get_csv $wd"usercubesummary.sql" no_output
-echo `date` running eventcubesummary.sql; $get_csv $wd"eventcubesummary.sql" no_output
+echo `date` running usercubesummary.sql; $run_sql $wd"/../sql/usercubesummary.sql" 
+echo `date` running eventcubesummary.sql; $run_sql $wd"/../sql/eventcubesummary.sql" 
 
 # User cube by date
-echo `date` running usercubedaily.sql; $get_csv $wd"usercubedaily.sql" no_output
+# (no longer running as it is a remnant of a previous need)
+# echo `date` running usercubedaily.sql; $run_sql $wd"/../sql/usercubedaily.sql" 
 
 echo `date` finished script...
 

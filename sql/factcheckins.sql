@@ -1,5 +1,4 @@
-IF OBJECT_ID('ReportingDB.dbo.FactCheckIns','U') IS NOT NULL
-  DROP TABLE ReportingDB.dbo.FactCheckIns
+DROP TABLE IF EXISTS EventCube.FactCheckIns;
 
 --======================================================
 -- Base set of Check-Ins from Ratings. 
@@ -10,20 +9,26 @@ IF OBJECT_ID('ReportingDB.dbo.FactCheckIns','U') IS NOT NULL
 -- 2. Additional joins for identifying flag indicators. 
 --======================================================
 
-SELECT DISTINCT S.ShowUpId, S.Created Timestamp, S.ApplicationId, GlobalUserId, S.UserId,
+CREATE TABLE EventCube.FactCheckIns AS 
+SELECT 
+S.ShowUpId, 
+S.Created AS Timestamp, 
+S.ApplicationId, 
+U.GlobalUserId, 
+S.UserId,
 CASE
-  WHEN ListTypeId = 0 THEN 'Unspecified'
-  WHEN ListTypeId = 1 THEN 'Regular'
-  WHEN ListTypeId = 2 THEN 'Agenda'
-  WHEN ListTypeId = 3 THEN 'Exhibitors'
-  WHEN ListTypeId = 4 THEN 'Speakers'
-  WHEN ListTypeId = 5 THEN 'File'
+  WHEN T.ListTypeId = 0 THEN 'Unspecified'
+  WHEN T.ListTypeId = 1 THEN 'Regular'
+  WHEN T.ListTypeId = 2 THEN 'Agenda'
+  WHEN T.ListTypeId = 3 THEN 'Exhibitors'
+  WHEN T.ListTypeId = 4 THEN 'Speakers'
+  WHEN T.ListTypeId = 5 THEN 'File'
   ELSE '???'
-END ListType, S.ItemId,
-CAST(IsTransient AS INT) IsHeadcount
-INTO ReportingDB.dbo.FactCheckIns
-FROM Ratings.dbo.ShowUps S
-LEFT OUTER JOIN Ratings.dbo.Item I ON S.ItemId = I.ItemId
-LEFT OUTER JOIN Ratings.dbo.Topic T ON I.ParentTopicId = T.TopicId
-JOIN ReportingDB.dbo.DimUsers U ON S.UserId = U.UserId
+END ListType, 
+S.ItemId,
+CAST(S.IsTransient AS INT) IsHeadcount
+FROM PUBLIC.Ratings_ShowUps S
+LEFT OUTER JOIN PUBLIC.Ratings_Item I ON S.ItemId = I.ItemId
+LEFT OUTER JOIN PUBLIC.Ratings_Topic T ON I.ParentTopicId = T.TopicId
+JOIN EventCube.DimUsers U ON S.UserId = U.UserId;
 
