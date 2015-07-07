@@ -1,14 +1,18 @@
-IF OBJECT_ID('ReportingDB.dbo.FactFollows','U') IS NOT NULL
-  DROP TABLE ReportingDB.dbo.FactFollows
+DROP TABLE IF EXISTS EventCube.FactFollows;
 
 --===================================================================================================
 -- Source on User Trust Fact table and enforces that each Follow is tied to an identified user. 
 -- * Upstream dependency on DimUsers.
 --===================================================================================================
 
-SELECT DISTINCT S.CreatedOn Timestamp, U.ApplicationId, U.GlobalUserId, S.UserId, T.GlobalUserId TargetGlobalUserId, T.UserId TargetUserId
-INTO ReportingDB.dbo.FactFollows
-FROM Ratings.dbo.UserTrust S
-JOIN ReportingDB.dbo.DimUsers U ON S.UserId = U.UserId
-LEFT OUTER JOIN ReportingDB.dbo.DimUsers T ON S.TrustsThisUserId = T.UserId
-
+CREATE TABLE EventCube.FactFollows AS 
+SELECT 
+S.Created AS Timestamp, 
+U.ApplicationId, 
+U.GlobalUserId, 
+S.UserId, 
+T.GlobalUserId AS TargetGlobalUserId, 
+T.UserId AS TargetUserId
+FROM PUBLIC.Ratings_UserTrust S
+JOIN EventCube.DimUsers U ON S.UserId = U.UserId
+LEFT OUTER JOIN EventCube.DimUsers T ON S.TrustsThisUserId = T.UserId;

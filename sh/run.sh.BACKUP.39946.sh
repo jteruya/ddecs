@@ -20,6 +20,10 @@ echo `date` running factcheckins.sql; $run_sql $wd"/../sql/factcheckins.sql"
 echo `date` running factratings.sql; $run_sql $wd"/../sql/factratings.sql" 
 echo `date` running factsurveys.sql; $run_sql $wd"/../sql/factsurveys.sql" 
 
+# Experimental cubes
+# echo `date` running factsessionsretention.sql; $get_csv $wd"factsessionsretention.sql" no_output
+# echo `date` running yieldcube.sql; $get_csv $wd"yieldcube.sql" no_output
+
 # User attributes
 echo `date` running dimuserbinaryversion.sql; $run_sql $wd"/../sql/dimuserbinaryversion.sql" 
 echo `date` running dimuserdevicetype.sql; $run_sql $wd"/../sql/dimuserdevicetype.sql" 
@@ -37,8 +41,12 @@ echo `date` running usercubesummary.sql; $run_sql $wd"/../sql/usercubesummary.sq
 echo `date` running eventcubesummary.sql; $run_sql $wd"/../sql/eventcubesummary.sql" 
 
 # User cube by date
+<<<<<<< HEAD
 # (no longer running as it is a remnant of a previous need)
 # echo `date` running usercubedaily.sql; $run_sql $wd"/../sql/usercubedaily.sql" 
+=======
+# echo `date` running usercubedaily.sql; $get_csv $wd"usercubedaily.sql" no_output
+>>>>>>> upstream/master
 
 echo `date` finished script...
 

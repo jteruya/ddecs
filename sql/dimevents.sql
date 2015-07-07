@@ -1,5 +1,4 @@
-IF OBJECT_ID('ReportingDB.dbo.DimEvents','U') IS NOT NULL
-  DROP TABLE ReportingDB.dbo.DimEvents
+DROP TABLE IF EXISTS EventCube.DimEvents;
 
 --===============================================================================================
 -- Base data on the Application source records. 
@@ -14,34 +13,33 @@ IF OBJECT_ID('ReportingDB.dbo.DimEvents','U') IS NOT NULL
 -- The above flagging transformations are handled differently depending on source table logic. 
 --===============================================================================================
 
-SELECT DISTINCT A.ApplicationId, dbo.STRIP_STRING(A.Name) Name,
+CREATE TABLE EventCube.DimEvents AS
+SELECT DISTINCT A.ApplicationId, TRIM(A.Name) AS Name,
 
-CAST(StartDate AS DATE) StartDate,
-CAST(EndDate AS DATE) EndDate,
+CAST(StartDate AS DATE) AS StartDate,
+CAST(EndDate AS DATE) AS EndDate,
 
-CAST(A.CanRegister AS INT) OpenEvent,
+CAST(A.CanRegister AS INT) AS OpenEvent,
 
-ISNULL(LeadScanning,0) LeadScanning,
-ISNULL(SurveysOn,0) SurveysOn,
-ISNULL(InteractiveMap,0) InteractiveMap,
-ISNULL(Leaderboard,0) Leaderboard,
-ISNULL(Bookmarking,0) Bookmarking,
-ISNULL(Photofeed,0) Photofeed,
-ISNULL(AttendeesList,0) AttendeesList,
-ISNULL(QRCode,0) QRCode,
+COALESCE(LeadScanning,0) AS LeadScanning,
+COALESCE(SurveysOn,0) AS SurveysOn,
+COALESCE(InteractiveMap,0) AS InteractiveMap,
+COALESCE(Leaderboard,0) AS Leaderboard,
+COALESCE(Bookmarking,0) AS Bookmarking,
+COALESCE(Photofeed,0) AS Photofeed,
+COALESCE(AttendeesList,0) AS AttendeesList,
+COALESCE(QRCode,0) AS QRCode,
 
-ISNULL(ExhibitorReqInfo,0) ExhibitorReqInfo,
-ISNULL(ExhibitorMsg,0) ExhibitorMsg,
-ISNULL(PrivateMsging,0) PrivateMsging,
-ISNULL(PeopleMatching,0) PeopleMatching,
-ISNULL(SocialNetworks,0) SocialNetworks,
-ISNULL(RatingsOn,0) RatingsOn
+COALESCE(ExhibitorReqInfo,0) AS ExhibitorReqInfo,
+COALESCE(ExhibitorMsg,0) AS ExhibitorMsg,
+COALESCE(PrivateMsging,0) AS PrivateMsging,
+COALESCE(PeopleMatching,0) AS PeopleMatching,
+COALESCE(SocialNetworks,0) AS SocialNetworks,
+COALESCE(RatingsOn,0) AS RatingsOn
 
-INTO ReportingDB.dbo.DimEvents
+FROM PUBLIC.AuthDB_Applications A
 
-FROM AuthDB.dbo.Applications A
-
-JOIN (SELECT DISTINCT ApplicationId FROM ReportingDB.dbo.DimUsers) U ON A.ApplicationId = U.Applicationid
+JOIN (SELECT DISTINCT ApplicationId FROM EventCube.DimUsers) U ON A.ApplicationId = U.Applicationid
 
 LEFT OUTER JOIN
 ( SELECT ApplicationId,
@@ -53,21 +51,22 @@ LEFT OUTER JOIN
   MAX(CASE WHEN TypeId = 11 THEN 1 ELSE 0 END) Photofeed,
   MAX(CASE WHEN TypeId = 8 THEN 1 ELSE 0 END) AttendeesList,
   MAX(CASE WHEN TypeId = 15 THEN 1 ELSE 0 END) QRCode
-  FROM Ratings.dbo.ApplicationConfigGridItems
+  FROM PUBLIC.Ratings_ApplicationConfigGridItems
   GROUP BY ApplicationId
 ) G
 ON U.ApplicationId = G.ApplicationId
 
 LEFT OUTER JOIN
 ( SELECT ApplicationId,
-  MAX(CASE WHEN Name = 'ExhibitorRequestInformationEnabled' AND Value = 'True' THEN 1 ELSE 0 END) ExhibitorReqInfo,
-  MAX(CASE WHEN Name = 'ExhibitorMessagingEnabled' AND Value = 'True' THEN 1 ELSE 0 END) ExhibitorMsg,
-  MAX(CASE WHEN Name = 'MessagingEnabled' AND Value = 'True' THEN 1 ELSE 0 END) PrivateMsging,
-  MAX(CASE WHEN Name = 'EnablePeopleMatching' AND Value = 'True' THEN 1 ELSE 0 END) PeopleMatching,
-  MAX(CASE WHEN Name = 'SocialNetworks' AND Value IS NOT NULL THEN 1 ELSE 0 END) SocialNetworks,
-  MAX(CASE WHEN Name = 'EnableRatings' AND Value = 'True' THEN 1 ELSE 0 END) RatingsOn
-  FROM Ratings.dbo.ApplicationConfigSettings
+  MAX(CASE WHEN Name = 'ExhibitorRequestInformationEnabled' AND SettingValue = 'True' THEN 1 ELSE 0 END) ExhibitorReqInfo,
+  MAX(CASE WHEN Name = 'ExhibitorMessagingEnabled' AND SettingValue = 'True' THEN 1 ELSE 0 END) ExhibitorMsg,
+  MAX(CASE WHEN Name = 'MessagingEnabled' AND SettingValue = 'True' THEN 1 ELSE 0 END) PrivateMsging,
+  MAX(CASE WHEN Name = 'EnablePeopleMatching' AND SettingValue = 'True' THEN 1 ELSE 0 END) PeopleMatching,
+  MAX(CASE WHEN Name = 'SocialNetworks' AND SettingValue IS NOT NULL THEN 1 ELSE 0 END) SocialNetworks,
+  MAX(CASE WHEN Name = 'EnableRatings' AND SettingValue = 'True' THEN 1 ELSE 0 END) RatingsOn
+  FROM PUBLIC.Ratings_ApplicationConfigSettings
   GROUP BY ApplicationId
 ) S
-ON U.ApplicationId = S.ApplicationId
+ON U.ApplicationId = S.ApplicationId;
 
+CREATE INDEX ndx_ecs_dimevents_applicationid ON EventCube.DimEvents (ApplicationId);

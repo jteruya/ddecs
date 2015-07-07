@@ -1,5 +1,4 @@
-IF OBJECT_ID('ReportingDB.dbo.FactSessions') IS NOT NULL
-  DROP TABLE ReportingDB.dbo.FactSessions
+DROP TABLE IF EXISTS EventCube.FactSessions;
 
 --===================================================================================================
 -- Source on Sessions Fact table and enforces that each session is tied to an identified user. 
@@ -11,19 +10,31 @@ IF OBJECT_ID('ReportingDB.dbo.FactSessions') IS NOT NULL
 -- 3. Device Type/OS translated from numeric code to string.
 --===================================================================================================
 
-SELECT DISTINCT StartDate Timestamp, S.ApplicationId, GlobalUserId, S.UserId,
-CASE WHEN BinaryVersion IS NULL THEN 'v???' WHEN LEFT(BinaryVersion,1) = 'v' THEN 'v'+RIGHT(LEFT(BinaryVersion,4),3) ELSE 'v'+LEFT(BinaryVersion,3) END BinaryVersion,
-CASE
-  WHEN AppTypeId = 1 THEN 'iPhone'
-  WHEN AppTypeId = 2 THEN 'iPad'
-  WHEN AppTypeId = 3 THEN 'Android'
-  WHEN AppTypeId = 4 THEN 'HTML5'
-  WHEN AppTypeId = 5 THEN 'WindowsPhone7'
-  WHEN AppTypeId = 6 THEN 'Blackberry'
-  ELSE '???'
-END Device, CASE WHEN AppTypeId BETWEEN 1 AND 2 THEN 'iOS' WHEN AppTypeId = 3 THEN 'Android' ELSE 'Other' END DeviceType
-INTO ReportingDB.dbo.FactSessions
-FROM AnalyticsDB.dbo.Sessions S
-JOIN ReportingDB.dbo.DimUsers U ON S.UserId = U.UserId
-WHERE S.UserId IS NOT NULL
+CREATE TABLE EventCube.FactSessions AS
+SELECT 
+  S.Start_Date AS Timestamp, 
+  S.Application_Id AS ApplicationId, 
+  U.GlobalUserId, 
+  S.User_Id,
+  CASE WHEN S.Binary_Version IS NULL THEN 'v???' WHEN LEFT(S.Binary_Version,1) = 'v' THEN 'v' || RIGHT(LEFT(S.Binary_Version,4),3) ELSE 'v' || LEFT(S.Binary_Version,3) END BinaryVersion,
+  CASE
+    WHEN S.App_Type_Id = 1 THEN 'iPhone'
+    WHEN S.App_Type_Id = 2 THEN 'iPad'
+    WHEN S.App_Type_Id = 3 THEN 'Android'
+    WHEN S.App_Type_Id = 4 THEN 'HTML5'
+    WHEN S.App_Type_Id = 5 THEN 'WindowsPhone7'
+    WHEN S.App_Type_Id = 6 THEN 'Blackberry'
+    ELSE '???'
+  END Device, 
+  CASE WHEN S.App_Type_Id BETWEEN 1 AND 2 THEN 'iOS' WHEN S.App_Type_Id = 3 THEN 'Android' ELSE 'Other' END DeviceType,
+  S.Device_Id AS DeviceId,
+  S.App_Type_Id AS AppTypeId
+FROM (SELECT Application_Id, User_Id, Start_Date, Binary_Version, App_Type_Id, Device_Id FROM PUBLIC.Fact_Sessions_Old WHERE User_Id IS NOT NULL) S
+JOIN EventCube.DimUsers U ON S.User_Id = U.UserId;
+
+CREATE INDEX ndx_ecs_factsessions_userid_binaryversion ON EventCube.FactSessions (User_Id, BinaryVersion);
+CREATE INDEX ndx_ecs_factsessions_userid_apptypeid ON EventCube.FactSessions (User_Id, AppTypeId);
+CREATE INDEX ndx_ecs_factsessions_userid ON EventCube.FactSessions (User_Id);
+
+
 

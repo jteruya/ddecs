@@ -1,5 +1,4 @@
-IF OBJECT_ID('ReportingDB.dbo.DimUserSocialNetworks','U') IS NOT NULL
-  DROP TABLE ReportingDB.dbo.DimUserSocialNetworks
+DROP TABLE IF EXISTS EventCube.DimUserSocialNetworks;
 
 --=========================================================================================================================
 -- Per User, identifies the authorizations performed per separate 3rd party social networks and flags per each identified. 
@@ -16,10 +15,10 @@ IF OBJECT_ID('ReportingDB.dbo.DimUserSocialNetworks','U') IS NOT NULL
 -- WHERE OAuthPartnerId IN (1,2,6)
 -- GROUP BY U.UserId
 
+CREATE TABLE EventCube.DimUserSocialNetworks AS 
 SELECT UserId,
 MAX(CASE WHEN FacebookUserId IS NOT NULL AND FacebookUserId != 0 THEN 1 ELSE 0 END) Facebook,
 MAX(CASE WHEN TwitterUserName IS NOT NULL THEN 1 ELSE 0 END) Twitter,
 MAX(CASE WHEN LinkedInId IS NOT NULL THEN 1 ELSE 0 END) LinkedIn
-INTO ReportingDB.dbo.DimUserSocialNetworks
-FROM Ratings.dbo.UserDetails
-GROUP BY UserId
+FROM PUBLIC.Ratings_UserDetails
+GROUP BY UserId;

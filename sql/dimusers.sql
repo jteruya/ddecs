@@ -1,5 +1,4 @@
-IF OBJECT_ID('ReportingDB.dbo.TempDimUsers') IS NOT NULL
-  DROP TABLE ReportingDB.dbo.TempDimUsers
+DROP TABLE IF EXISTS EventCube.TempDimUsers;
 
 --================================================================================================================
 -- Create an initial Temporary set of User Dimension data that will be standardized/aggregated from fact data. 
@@ -22,51 +21,60 @@ IF OBJECT_ID('ReportingDB.dbo.TempDimUsers') IS NOT NULL
 -- F. Filter out any User ID of value 0
 --================================================================================================================
 
-SELECT MIN(FirstTimestamp) FirstTimestamp, MAX(LastTimestamp) LastTimestamp, F.ApplicationId, GlobalUserId, F.UserId
-INTO ReportingDB.dbo.TempDimUsers
+CREATE TABLE EventCube.TempDimUsers AS
+SELECT MIN(FirstTimestamp) FirstTimestamp, MAX(LastTimestamp) LastTimestamp, F.ApplicationId, U.GlobalUserId, F.UserId
 FROM
-( SELECT ApplicationId, UserId, MIN(StartDate) FirstTimestamp, MAX(StartDate) LastTimestamp
-  FROM AnalyticsDB.dbo.Sessions
-  WHERE UserId IS NOT NULL
-  GROUP BY ApplicationId, UserId
+( 
+  SELECT * FROM  EventCube.Agg_Session_per_AppUser
+  
   UNION
+  
   SELECT ApplicationId, UserId, MIN(Created) FirstTimestamp, MAX(Created) LastTimestamp
-  FROM Ratings.dbo.UserCheckIns
+  FROM PUBLIC.Ratings_UserCheckins
   GROUP BY ApplicationId, UserId
+  
   UNION
-  SELECT ApplicationId, L.UserId, MIN(L.Created) FirstTimestamp, MAX(L.Created) LastTimestamp
-  FROM Ratings.dbo.UserCheckInLikes L
-  JOIN Ratings.dbo.UserCheckIns P ON L.CheckInId = P.CheckInId
-  GROUP BY ApplicationId, L.UserId
+
+  SELECT L.ApplicationId, L.UserId, MIN(L.Created) FirstTimestamp, MAX(L.Created) LastTimestamp
+  FROM PUBLIC.Ratings_UserCheckInLikes L
+  GROUP BY L.ApplicationId, L.UserId
+  
   UNION
-  SELECT ApplicationId, C.UserId, MIN(C.Created) FirstTimestamp, MAX(C.Created) LastTimestamp
-  FROM Ratings.dbo.UserCheckInComments C
-  JOIN Ratings.dbo.UserCheckIns P ON C.CheckInId = P.CheckInId
-  GROUP BY ApplicationId, C.UserId
+  
+  SELECT C.ApplicationId, C.UserId, MIN(C.Created) FirstTimestamp, MAX(C.Created) LastTimestamp
+  FROM PUBLIC.Ratings_UserCheckInComments C
+  GROUP BY C.ApplicationId, C.UserId
+  
   UNION
+
   SELECT ApplicationId, UserId, MIN(Created) FirstTimestamp, MAX(Created) LastTimestamp
-  FROM Ratings.dbo.UserFavorites
+  FROM PUBLIC.Ratings_UserFavorites
   GROUP BY ApplicationId, UserId
+  
   UNION
-  SELECT ApplicationId, F.UserId, MIN(CreatedOn) FirstTimestamp, MAX(CreatedOn) LastTimestamp
-  FROM Ratings.dbo.UserTrust F
-  JOIN AuthDB.dbo.IS_Users U ON F.UserId = U.UserId
-  GROUP BY ApplicationId, F.UserId
+
+  SELECT U.ApplicationId, F.UserId, F.FirstTimestamp, F.LastTimestamp
+  FROM (SELECT F.UserId, MIN(F.Created) FirstTimestamp, MAX(F.Created) LastTimestamp FROM PUBLIC.Ratings_UserTrust F GROUP BY F.UserId) F
+  JOIN PUBLIC.AuthDB_IS_Users U ON F.UserId = U.UserId
+  
   UNION
+
   SELECT ApplicationId, UserId, MIN(Created) FirstTimestamp, MAX(Created) LastTimestamp
-  FROM Ratings.dbo.ShowUps
+  FROM PUBLIC.Ratings_ShowUps
   GROUP BY ApplicationId, UserId
+  
   UNION
-  SELECT ApplicationId, UserId, MIN(R.Created) FirstTimestamp, MAX(R.Created) LastTimestamp
-  FROM Ratings.dbo.SurveyResponses R
-  JOIN Ratings.dbo.SurveyQuestions Q ON R.SurveyQuestionId = Q.SurveyQuestionId
-  JOIN Ratings.dbo.Surveys S ON Q.SurveyId = S.SurveyId
-  GROUP BY ApplicationId, UserId
+  
+  SELECT S.ApplicationId, R.UserId, MIN(R.Created) FirstTimestamp, MAX(R.Created) LastTimestamp
+  FROM PUBLIC.Ratings_SurveyResponses R
+  JOIN PUBLIC.Ratings_SurveyQuestions Q ON R.SurveyQuestionId = Q.SurveyQuestionId
+  JOIN PUBLIC.Ratings_Surveys S ON Q.SurveyId = S.SurveyId
+  GROUP BY S.ApplicationId, R.UserId
 ) F 
-LEFT OUTER JOIN AuthDB.dbo.IS_Users U ON F.ApplicationId = U.ApplicationId AND F.UserId = U.UserId
-WHERE F.ApplicationId NOT IN (SELECT ApplicationId FROM ReportingDB.dbo.TestEvents)
+LEFT OUTER JOIN PUBLIC.AuthDB_IS_Users U ON F.ApplicationId = U.ApplicationId AND F.UserId = U.UserId
+WHERE F.ApplicationId NOT IN (SELECT ApplicationId FROM EventCube.TestEvents)
 GROUP BY F.ApplicationId, GlobalUserId, F.UserId
-HAVING MIN(FirstTimestamp) >= '2013-05-16' AND MAX(LastTimestamp) <= GETUTCDATE()
+HAVING MIN(FirstTimestamp) >= '2013-05-16' AND MAX(LastTimestamp) <= CURRENT_DATE;
 
 -- Get first timestamp of Flock 3, when tracking is considered as starting to be reliable
 -- SELECT DISTINCT
@@ -89,16 +97,15 @@ HAVING MIN(FirstTimestamp) >= '2013-05-16' AND MAX(LastTimestamp) <= GETUTCDATE(
 -- OR UserId IN (SELECT UserId FROM ReportingDB.dbo.TempDimUsers GROUP BY UserId HAVING COUNT(DISTINCT ApplicationId) > 1)
 -- OR UserId = 0
 
-IF OBJECT_ID('ReportingDB.dbo.DimUsers') IS NOT NULL
-  DROP TABLE ReportingDB.dbo.DimUsers
+DROP TABLE IF EXISTS EventCube.DimUsers;
 
+CREATE TABLE EventCube.DimUsers AS
 SELECT *
-INTO ReportingDB.dbo.DimUsers
-FROM ReportingDB.dbo.TempDimUsers U WHERE 1=1
+FROM EventCube.TempDimUsers U WHERE 1=1
 -- WHERE NOT EXISTS (SELECT 1 FROM ReportingDB.dbo.DimBadUsers B WHERE U.ApplicationId = B.ApplicationId AND U.GlobalUserId = B.GlobalUserId AND U.UserId = B.UserId) -- Why the eff doesn't this work
 AND GlobalUserId IS NOT NULL
-AND NOT EXISTS (SELECT 1 FROM (SELECT UserId FROM ReportingDB.dbo.TempDimUsers GROUP BY UserId HAVING COUNT(DISTINCT ApplicationId) > 1) B WHERE U.UserId = B.UserId)
-AND UserId != 0
+AND NOT EXISTS (SELECT 1 FROM (SELECT UserId FROM EventCube.TempDimUsers GROUP BY UserId HAVING COUNT(DISTINCT ApplicationId) > 1) B WHERE U.UserId = B.UserId)
+AND UserId != 0;
 
 /*
 AND ApplicationId NOT IN (
@@ -108,6 +115,7 @@ JOIN ReportingDB.dbo.DimEvents b ON a.ApplicationId = b.ApplicationId
 WHERE (LOWER(Name) LIKE '%test%' OR LOWER(Name) LIKE '%dext%' OR LOWER(Name) LIKE '%do not use%') AND LOWER(Name) NOT LIKE '%testing conference%' AND LOWER(Name) NOT LIKE '%contest%'
 */
 
-IF OBJECT_ID('ReportingDB.dbo.TempDimUsers') IS NOT NULL
-  DROP TABLE ReportingDB.dbo.TempDimUsers
+--DROP TABLE IF EXISTS EventCube.TempDimUsers;
 
+CREATE INDEX ndx_ecs_dimusers ON EventCube.DimUsers (UserId);
+CREATE INDEX ndx_ecs_dimusers_applicationid ON EventCube.DimUsers (ApplicationId);

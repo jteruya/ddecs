@@ -1,5 +1,4 @@
-IF OBJECT_ID('ReportingDB.dbo.FactLikes','U') IS NOT NULL
-  DROP TABLE ReportingDB.dbo.FactLikes
+DROP TABLE IF EXISTS EventCube.FactLikes;
 
 --===================================================================================================
 -- Source on User Likes Fact table and enforces that each like is tied to an identified user. 
@@ -10,20 +9,25 @@ IF OBJECT_ID('ReportingDB.dbo.FactLikes','U') IS NOT NULL
 -- 2. Flag inidcator that related post has image. 
 --===================================================================================================
 
-SELECT DISTINCT S.Created Timestamp, P.ApplicationId, GlobalUserId, S.UserId,
+CREATE TABLE EventCube.FactLikes AS 
+SELECT 
+S.Created AS Timestamp, 
+S.ApplicationId, 
+S.GlobalUserId, 
+S.UserId,
 CASE
-  WHEN ListTypeId = 0 THEN 'Unspecified'
-  WHEN ListTypeId = 1 THEN 'Regular'
-  WHEN ListTypeId = 2 THEN 'Agenda'
-  WHEN ListTypeId = 3 THEN 'Exhibitors'
-  WHEN ListTypeId = 4 THEN 'Speakers'
-  WHEN ListTypeId = 5 THEN 'File'
+  WHEN P.ListTypeId = 0 THEN 'Unspecified'
+  WHEN P.ListTypeId = 1 THEN 'Regular'
+  WHEN P.ListTypeId = 2 THEN 'Agenda'
+  WHEN P.ListTypeId = 3 THEN 'Exhibitors'
+  WHEN P.ListTypeId = 4 THEN 'Speakers'
+  WHEN P.ListTypeId = 5 THEN 'File'
   ELSE '???'
-END ListType, ItemId,
+END ListType, 
+P.ItemId,
 CASE WHEN I.CheckInId IS NOT NULL THEN 1 ELSE 0 END HasImage
-INTO ReportingDB.dbo.FactLikes
-FROM Ratings.dbo.UserCheckInLikes S
-LEFT OUTER JOIN (SELECT DISTINCT P.ApplicationId, CheckInId, ListTypeId, P.ItemId FROM Ratings.dbo.UserCheckIns P JOIN Ratings.dbo.Item I ON P.ItemId = I.ItemId JOIN Ratings.dbo.Topic T ON I.ParentTopicId = T.TopicId) P ON S.CheckInId = P.CheckInId
-LEFT OUTER JOIN (SELECT DISTINCT CheckInId FROM Ratings.dbo.UserCheckInImages) I ON P.CheckInId = I.CheckInId
-JOIN ReportingDB.dbo.DimUsers U ON S.UserId = U.UserId
+FROM (SELECT S.ApplicationId, S.UserId, S.Created, S.CheckInId, U.GlobalUserId FROM PUBLIC.Ratings_UserCheckInLikes S JOIN EventCube.DimUsers U ON S.UserId = U.UserId) S
+LEFT OUTER JOIN (SELECT P.ApplicationId, P.CheckInId, T.ListTypeId, P.ItemId FROM PUBLIC.Ratings_UserCheckIns P JOIN PUBLIC.Ratings_Item I ON P.ItemId = I.ItemId JOIN PUBLIC.Ratings_Topic T ON I.ParentTopicId = T.TopicId) P ON S.CheckInId = P.CheckInId
+LEFT OUTER JOIN (SELECT DISTINCT CheckInId FROM PUBLIC.Ratings_UserCheckInImages) I ON S.CheckInId = I.CheckInId;
 
+CREATE INDEX ndx_ecs_factlikes_userid ON EventCube.FactLikes (UserId);

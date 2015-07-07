@@ -1,8 +1,19 @@
-IF OBJECT_ID('ReportingDB.dbo.TestEvents') IS NOT NULL
-  DROP TABLE ReportingDB.dbo.TestEvents
+-- Identfy the number of users with sessions per each Event
+DROP TABLE IF EXISTS EventCube.Agg_Session_per_AppUser;
 
+CREATE TABLE EventCube.Agg_Session_per_AppUser AS 
+SELECT Application_Id AS ApplicationId, User_Id AS UserId, MIN(Start_Date) FirstTimestamp, MAX(Start_Date) LastTimestamp
+FROM PUBLIC.Fact_Sessions_Old
+WHERE User_Id IS NOT NULL
+GROUP BY Application_Id, User_Id;
+
+CREATE INDEX ndx_agg_sessions_applicationid ON EventCube.Agg_Session_per_AppUser(ApplicationId);
+
+--Begin to build the list of Test Events
+DROP TABLE IF EXISTS EventCube.TestEvents;
+
+CREATE TABLE EventCube.TestEvents AS
 SELECT S.*
-INTO ReportingDB.dbo.TestEvents
 FROM
 --============================================================================================================
 -- Identify the Test Events through two methods:
@@ -10,9 +21,9 @@ FROM
 -- 1b. Identify if the specific Bundle Unique ID is tied to a test event (as specified by internal users)
 -- 2.  Check if the Event has 20 or fewer Users across all Event sessions (or no Event sessions at all)
 --============================================================================================================
-( SELECT DISTINCT ApplicationId, dbo.STRIP_STRING(A.Name) Name
-  FROM AuthDB.dbo.Applications A
-  JOIN AuthDB.dbo.Bundles B ON A.BundleId = B.BundleId
+( SELECT DISTINCT ApplicationId, TRIM(A.Name) AS NAME
+  FROM PUBLIC.AuthDB_Applications A
+  JOIN PUBLIC.AuthDB_Bundles B ON A.BundleId = B.BundleId
   
   -- 1a --
   WHERE A.Name LIKE '%DoubleDutch%'
@@ -24,10 +35,10 @@ FROM
   UNION
   
   -- 2 --
-  SELECT A.ApplicationId, dbo.STRIP_STRING(Name) Name
-  FROM AuthDB.dbo.Applications A
-  LEFT JOIN AnalyticsDB.dbo.Sessions S ON S.ApplicationId = A.ApplicationId
-  GROUP BY A.ApplicationId, dbo.STRIP_STRING(Name)
-  HAVING COUNT(DISTINCT UserId) <= 20
+  SELECT A.ApplicationId, TRIM(A.Name) AS NAME
+  FROM PUBLIC.AuthDB_Applications A
+  JOIN (SELECT ApplicationId FROM EventCube.Agg_Session_per_AppUser GROUP BY 1 HAVING COUNT(*) <= 20) S ON A.ApplicationId = S.ApplicationId
+
 ) S
+
 
