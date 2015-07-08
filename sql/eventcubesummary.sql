@@ -1,4 +1,4 @@
-DROP TABLE IF EXISTS EventCube.EventCubeSummary;  
+DROP TABLE IF EXISTS EventCube.EventCubeSummary CASCADE;  
 
 --==========================================================
 -- Aggregation on the User Cube Summary at the Event level
@@ -137,3 +137,7 @@ LEFT OUTER JOIN
         FROM PUBLIC.Ratings_GlobalMessages
         GROUP BY ApplicationId
 ) G ON S.ApplicationId = G.ApplicationId;
+
+-- Create the View for Reporter user 
+CREATE OR REPLACE VIEW report.v_eventcubesummary AS
+SELECT * FROM EventCube.EventCubeSummary;
