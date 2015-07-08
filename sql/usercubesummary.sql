@@ -9,8 +9,8 @@ CREATE TABLE EventCube.UserCubeSummary AS
 SELECT 
 U.ApplicationId, 
 COALESCE(Name,'???') AS Name, 
-CASE WHEN SF.SF_EventStartDate IS NOT NULL THEN CAST(SF.SF_EventStartDate AS DATE) ELSE E.StartDate END AS StartDate, 
-CASE WHEN SF.SF_EventEndDate IS NOT NULL THEN CAST(SF.SF_EventEndDate AS DATE) ELSE E.EndDate END AS EndDate,
+CASE WHEN SF.SF_EventStartDate IS NOT NULL AND SF.SF_EventStartDate <> '' THEN CAST(SF.SF_EventStartDate AS DATE) ELSE E.StartDate END AS StartDate, 
+CASE WHEN SF.SF_EventEndDate IS NOT NULL AND SF.SF_EventEndDate <> '' THEN CAST(SF.SF_EventEndDate AS DATE) ELSE E.EndDate END AS EndDate,
 COALESCE(OpenEvent,-1) AS OpenEvent, 
 COALESCE(LeadScanning,-1) AS LeadScanning, 
 COALESCE(SurveysOn,-1) AS SurveysOn, 
@@ -40,6 +40,8 @@ COALESCE(Twitter,0) AS Twitter,
 COALESCE(LinkedIn,0) AS LinkedIn, 
 U.GlobalUserId, 
 U.UserId,
+U.FirstTimestamp,
+U.LastTimestamp,
 CASE WHEN Sessions >= 2 THEN 1 ELSE 0 END AS Active, 
 CASE WHEN Sessions >= 10 THEN 1 ELSE 0 END AS Engaged,
 COALESCE(Sessions,0) AS Sessions, 
@@ -69,7 +71,7 @@ LEFT OUTER JOIN EventCube.DimUserBinaryVersion N ON U.UserId = N.UserId
 LEFT OUTER JOIN EventCube.DimUserDeviceType D ON U.UserId = D.UserId
 LEFT OUTER JOIN EventCube.DimUserSocialNetworks O ON U.UserId = O.UserId
 LEFT OUTER JOIN EventCube.DimEvents E ON U.ApplicationId = E.ApplicationId
-LEFT OUTER JOIN EventCube.DimEventsSFDC SF ON U.ApplicationId = CAST(SF.ApplicationId AS VARCHAR);
+LEFT OUTER JOIN EventCube.DimEventsSFDC SF ON LOWER(U.ApplicationId) = LOWER(CAST(SF.ApplicationId AS VARCHAR));
 
 CREATE INDEX ndx_ecs_usercubesummary ON EventCube.UserCubeSummary (UserId);
 CREATE INDEX ndx_ecs_usercubesummary_applicationid ON EventCube.UserCubeSummary (ApplicationId);
