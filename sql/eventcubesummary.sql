@@ -34,7 +34,7 @@ SELECT
         OwnerName,
         BinaryVersion,
         COALESCE(Registrants,0) AS Registrants, 
-        --COALESCE(Downloads,0) AS Downloads, 
+        COALESCE(Downloads,0) AS Downloads, 
         Users, 
         UsersActive, 
         UsersFacebook, 
