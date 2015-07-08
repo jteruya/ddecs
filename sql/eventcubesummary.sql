@@ -1,5 +1,5 @@
 DROP TABLE IF EXISTS EventCube.EventCubeSummary CASCADE;  
-
+SELECT * FROM EventCube.EventCubeSummary
 --==========================================================
 -- Aggregation on the User Cube Summary at the Event level
 -- * Upstream dependency on User Cube Summary
@@ -37,6 +37,7 @@ SELECT
         COALESCE(Downloads,0) AS Downloads, 
         Users, 
         UsersActive, 
+        UsersEngaged,
         UsersFacebook, 
         UsersTwitter, 
         UsersLinkedIn, 
@@ -54,7 +55,11 @@ SELECT
         Reviews, 
         Surveys,
         COALESCE(PromotedPosts,0) AS PromotedPosts, 
-        COALESCE(GlobalPushNotifications,0) AS GlobalPushNotifications
+        COALESCE(GlobalPushNotifications,0) AS GlobalPushNotifications,
+        ADOPTION_FOOL.Adoption, 
+        COALESCE(E.Exhibitors,0) AS Exhibitors, 
+        COALESCE(PC.Polls,0) AS Polls, 
+        COALESCE(PR.PollResponses,0) AS PollResponses
 FROM
 (       SELECT 
                 S.ApplicationId, 
@@ -85,6 +90,7 @@ FROM
                 B.BinaryVersion,
                 COUNT(*) AS Users, 
                 SUM(Active) AS UsersActive, 
+                SUM(Engaged) UsersEngaged,
                 SUM(Facebook) AS UsersFacebook, 
                 SUM(Twitter) AS UsersTwitter, 
                 SUM(LinkedIn) AS UsersLinkedIn,
@@ -136,7 +142,56 @@ LEFT OUTER JOIN
                 COUNT(*) GlobalPushNotifications
         FROM PUBLIC.Ratings_GlobalMessages
         GROUP BY ApplicationId
-) G ON S.ApplicationId = G.ApplicationId;
+) G ON S.ApplicationId = G.ApplicationId
+LEFT OUTER JOIN
+( 
+        SELECT 
+                U.ApplicationId,
+                1.0*SUM(CASE WHEN S.ApplicationId IS NOT NULL AND S.UserId IS NOT NULL THEN 1 ELSE 0 END)/COUNT(*) Adoption
+        FROM
+        ( 
+                SELECT 
+                        U.ApplicationId, 
+                        U.UserId
+                FROM PUBLIC.AuthDB_IS_Users U
+                JOIN (SELECT ApplicationId FROM PUBLIC.AuthDB_Applications WHERE CanRegister = false) E ON U.ApplicationId = E.ApplicationId
+                WHERE IsDisabled = 0
+        ) U
+        LEFT OUTER JOIN
+        (SELECT ApplicationId, UserId FROM EventCube.Agg_Session_Per_AppUser) S ON U.ApplicationId = S.ApplicationId AND U.UserId = S.UserId
+        GROUP BY U.ApplicationId
+) ADOPTION_FOOL ON S.ApplicationId = ADOPTION_FOOL.ApplicationId
+LEFT OUTER JOIN
+( 
+        SELECT 
+                i.ApplicationId, 
+                COUNT(DISTINCT ItemId) AS Exhibitors
+        FROM PUBLIC.Ratings_Item i
+        JOIN PUBLIC.Ratings_Topic t ON i.ParentTopicId = t.TopicId
+        WHERE ListTypeId = 3 AND i.IsDisabled = 0 --AND i.IsArchived = 'false'
+        GROUP BY i.ApplicationId
+) E ON E.ApplicationId = S.ApplicationId
+LEFT OUTER JOIN
+( 
+        SELECT 
+                S.ApplicationId, 
+                1.0 * count(S.ApplicationId) Polls 
+        FROM PUBLIC.Ratings_Surveys S 
+        WHERE S.IsPoll = 'true'
+        GROUP BY S.ApplicationId
+) PC ON PC.ApplicationId = S.ApplicationId
+LEFT OUTER JOIN
+( 
+        SELECT 
+                s.ApplicationId, 
+                1.0 * COUNT(sr.SurveyResponseId) PollResponses
+        FROM PUBLIC.Ratings_SurveyResponses sr
+        JOIN PUBLIC.Ratings_SurveyQuestions sq ON sr.SurveyQuestionId = sq.SurveyQuestionId
+        JOIN PUBLIC.Ratings_Surveys s ON sq.SurveyId = s.SurveyId
+        WHERE s.IsPoll = 'true'
+        GROUP BY s.ApplicationId
+) PR ON PR.ApplicationId = S.ApplicationId
+;
 
 -- Create the View for Reporter user 
 CREATE OR REPLACE VIEW report.v_eventcubesummary AS
