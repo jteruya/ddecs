@@ -1,5 +1,5 @@
 DROP TABLE IF EXISTS EventCube.EventCubeSummary CASCADE;  
-SELECT * FROM EventCube.EventCubeSummary
+
 --==========================================================
 -- Aggregation on the User Cube Summary at the Event level
 -- * Upstream dependency on User Cube Summary
