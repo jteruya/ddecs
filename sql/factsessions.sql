@@ -11,7 +11,7 @@ DROP TABLE IF EXISTS EventCube.FactSessions;
 --===================================================================================================
 
 CREATE TABLE EventCube.FactSessions AS
-SELECT 
+SELECT DISTINCT
   S.Start_Date AS Timestamp, 
   S.Application_Id AS ApplicationId, 
   U.GlobalUserId, 

@@ -50,7 +50,8 @@ COALESCE(PostsImage,0) AS PostsImage,
 COALESCE(PostsItem,0) AS PostsItem, 
 COALESCE(Likes,0) AS Likes, 
 COALESCE(Comments,0) AS Comments, 
-COALESCE(Bookmarks,0) AS Bookmarks, 
+COALESCE(TotalBookmarks,0) AS TotalBookmarks, 
+COALESCE(ImportedBookmarks,0) AS ImportedBookmarks, 
 COALESCE(Follows,0) AS Follows, 
 COALESCE(CheckIns,0) AS CheckIns, 
 COALESCE(CheckInsHeadcount,0) AS CheckInsHeadcount, 
@@ -62,7 +63,7 @@ LEFT OUTER JOIN (SELECT User_Id AS UserId, COUNT(*) AS Sessions FROM EventCube.F
 LEFT OUTER JOIN (SELECT UserId, COUNT(*) AS Posts, SUM(HasImage) PostsImage, SUM(CASE WHEN ListType != 'Regular' THEN 1 ELSE 0 END) PostsItem FROM EventCube.FactPosts GROUP BY UserId) P ON U.UserId = P.UserId
 LEFT OUTER JOIN (SELECT UserId, COUNT(*) AS Likes FROM EventCube.FactLikes GROUP BY UserId) L ON U.UserId = L.UserId
 LEFT OUTER JOIN (SELECT UserId, COUNT(*) AS Comments FROM EventCube.FactComments GROUP BY UserId) C ON U.UserId = C.UserId
-LEFT OUTER JOIN (SELECT UserId, COUNT(*) AS Bookmarks FROM EventCube.FactBookmarks GROUP BY UserId) B ON U.UserId = B.UserId
+LEFT OUTER JOIN (SELECT UserId, COUNT(*) AS TotalBookmarks, SUM(CASE WHEN IsImported IS NULL THEN 0 WHEN IsImported IS false THEN 0 ELSE 1 END) AS ImportedBookmarks FROM EventCube.FactBookmarks GROUP BY UserId) B ON U.UserId = B.UserId
 LEFT OUTER JOIN (SELECT UserId, COUNT(*) AS Follows FROM EventCube.FactFollows GROUP BY UserId) F ON U.UserId = F.UserId
 LEFT OUTER JOIN (SELECT UserId, COUNT(*) AS CheckIns, SUM(IsHeadcount) CheckInsHeadcount FROM EventCube.FactCheckIns GROUP BY UserId) K ON U.UserId = K.UserId
 LEFT OUTER JOIN (SELECT UserId, COUNT(*) AS Ratings, SUM(HasReview) Reviews FROM EventCube.FactRatings GROUP BY UserId) R ON U.UserId = R.UserId

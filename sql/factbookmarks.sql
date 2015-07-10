@@ -23,7 +23,8 @@ CASE
   WHEN T.ListTypeId = 5 THEN 'File'
   ELSE '???'
 END ListType, 
-S.ItemId
+S.ItemId,
+S.IsImported
 FROM PUBLIC.Ratings_UserFavorites S
 LEFT OUTER JOIN PUBLIC.Ratings_Item I ON S.ItemId = I.ItemId
 LEFT OUTER JOIN PUBLIC.Ratings_Topic T ON I.ParentTopicId = T.TopicId
