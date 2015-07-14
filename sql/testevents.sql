@@ -37,8 +37,8 @@ FROM
   -- 2 --
   SELECT A.ApplicationId, TRIM(A.Name) AS NAME
   FROM PUBLIC.AuthDB_Applications A
-  JOIN (SELECT ApplicationId FROM EventCube.Agg_Session_per_AppUser GROUP BY 1 HAVING COUNT(*) <= 20) S ON A.ApplicationId = S.ApplicationId
+  LEFT JOIN EventCube.Agg_Session_per_AppUser S ON A.ApplicationId = S.ApplicationId
+  GROUP BY 1,2
+  HAVING COUNT(*) <= 20
 
 ) S
-
-

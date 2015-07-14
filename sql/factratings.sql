@@ -10,6 +10,7 @@ DROP TABLE IF EXISTS EventCube.FactRatings;
 --===================================================================================================
 
 CREATE TABLE EventCube.FactRatings AS 
+SELECT * FROM (
 SELECT 
 S.Created AS Timestamp, 
 S.ApplicationId, 
@@ -30,4 +31,6 @@ CASE WHEN S.Comments != '' AND S.Comments IS NOT NULL THEN 1 ELSE 0 END HasRevie
 FROM PUBLIC.Ratings_ItemRatings S
 LEFT OUTER JOIN PUBLIC.Ratings_Item I ON S.ItemId = I.ItemId
 LEFT OUTER JOIN PUBLIC.Ratings_Topic T ON I.ParentTopicId = T.TopicId
-JOIN EventCube.DimUsers U ON S.UserId = U.UserId;
+JOIN EventCube.DimUsers U ON S.UserId = U.UserId
+) t WHERE HasReview = 1 ORDER BY Timestamp
+;

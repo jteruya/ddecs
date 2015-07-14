@@ -116,11 +116,12 @@ FROM
 LEFT OUTER JOIN
 ( 
         SELECT 
-                ApplicationId, 
-                COUNT(DISTINCT UserId) AS Registrants
-        FROM PUBLIC.AuthDB_IS_Users
-        WHERE IsDisabled = 0
-        GROUP BY ApplicationId
+                u.ApplicationId, 
+                COUNT(DISTINCT u.UserId) AS Registrants
+        FROM PUBLIC.AuthDB_IS_Users u
+        JOIN PUBLIC.AuthDB_Applications a ON u.ApplicationId = a.ApplicationId
+        WHERE u.IsDisabled = 0 AND a.CanRegister = 'false'
+        GROUP BY u.ApplicationId
 ) R ON S.ApplicationId = R.ApplicationId
 LEFT OUTER JOIN
 ( 
@@ -170,7 +171,7 @@ LEFT OUTER JOIN
                 COUNT(DISTINCT ItemId) AS Exhibitors
         FROM PUBLIC.Ratings_Item i
         JOIN PUBLIC.Ratings_Topic t ON i.ParentTopicId = t.TopicId
-        WHERE ListTypeId = 3 AND i.IsDisabled = 0 --AND i.IsArchived = 'false'
+        WHERE ListTypeId = 3 AND i.IsDisabled = 0 AND i.IsArchived = 'false'
         GROUP BY i.ApplicationId
 ) E ON E.ApplicationId = S.ApplicationId
 LEFT OUTER JOIN
