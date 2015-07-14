@@ -10,7 +10,7 @@ DROP TABLE IF EXISTS EventCube.FactSurveys;
 --===================================================================================================
 
 CREATE TABLE EventCube.FactSurveys AS 
-SELECT 
+SELECT DISTINCT
 R.Created AS Timestamp, 
 S.ApplicationId, 
 U.GlobalUserId, 
