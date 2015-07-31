@@ -28,3 +28,6 @@ LEFT OUTER JOIN
 ON Q.SurveyId = N.SurveyId
 JOIN EventCube.DimUsers U ON R.UserId = U.UserId
 WHERE S.IsPoll IS FALSE;
+
+CREATE INDEX ndx_ecs_factsurveys_userid ON EventCube.FactSurveys (UserId);
+CREATE INDEX ndx_ecs_factsurveys_timestamp ON EventCube.FactSurveys (Timestamp);

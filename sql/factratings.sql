@@ -34,3 +34,6 @@ LEFT OUTER JOIN PUBLIC.Ratings_Topic T ON I.ParentTopicId = T.TopicId
 JOIN EventCube.DimUsers U ON S.UserId = U.UserId
 ) t WHERE HasReview = 1 ORDER BY Timestamp
 ;
+
+CREATE INDEX ndx_ecs_factratings_userid ON EventCube.FactRatings (UserId);
+CREATE INDEX ndx_ecs_factratings_timestamp ON EventCube.FactRatings (Timestamp);
