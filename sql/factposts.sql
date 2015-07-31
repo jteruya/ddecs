@@ -31,3 +31,5 @@ JOIN EventCube.DimUsers U ON S.UserId = U.UserId
 LEFT OUTER JOIN (SELECT DISTINCT CheckInId FROM PUBLIC.Ratings_UserCheckInImages) I ON S.CheckInId = I.CheckInId
 LEFT OUTER JOIN (SELECT I.ItemId, T.ListTypeId FROM PUBLIC.Ratings_Item I JOIN PUBLIC.Ratings_Topic T ON I.ParentTopicId = T.TopicId) T ON S.ItemId = T.ItemId;
 
+CREATE INDEX ndx_ecs_factposts_userid ON EventCube.FactPosts (UserId);
+CREATE INDEX ndx_ecs_factposts_timestamp ON EventCube.FactPosts (Timestamp);

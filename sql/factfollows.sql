@@ -16,3 +16,6 @@ T.UserId AS TargetUserId
 FROM PUBLIC.Ratings_UserTrust S
 JOIN EventCube.DimUsers U ON S.UserId = U.UserId
 LEFT OUTER JOIN EventCube.DimUsers T ON S.TrustsThisUserId = T.UserId;
+
+CREATE INDEX ndx_ecs_factfollows_userid ON EventCube.FactFollows (UserId);
+CREATE INDEX ndx_ecs_factfollows_timestamp ON EventCube.FactFollows (Timestamp);

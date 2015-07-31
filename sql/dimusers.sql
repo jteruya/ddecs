@@ -119,3 +119,5 @@ WHERE (LOWER(Name) LIKE '%test%' OR LOWER(Name) LIKE '%dext%' OR LOWER(Name) LIK
 
 CREATE INDEX ndx_ecs_dimusers ON EventCube.DimUsers (UserId);
 CREATE INDEX ndx_ecs_dimusers_applicationid ON EventCube.DimUsers (ApplicationId);
+CREATE INDEX ndx_ecs_dimusers_firsttimestamp ON EventCube.DimUsers (FirstTimestamp);
+CREATE INDEX ndx_ecs_dimusers_userid_applicationid ON EventCube.DimUsers (UserId,ApplicationId);

@@ -29,3 +29,6 @@ FROM PUBLIC.Ratings_UserFavorites S
 LEFT OUTER JOIN PUBLIC.Ratings_Item I ON S.ItemId = I.ItemId
 LEFT OUTER JOIN PUBLIC.Ratings_Topic T ON I.ParentTopicId = T.TopicId
 JOIN EventCube.DimUsers U ON S.UserId = U.UserId;
+
+CREATE INDEX ndx_ecs_factbookmarks_userid ON EventCube.FactBookmarks (UserId);
+CREATE INDEX ndx_ecs_factbookmarks_timestamp ON EventCube.FactBookmarks (Timestamp);
