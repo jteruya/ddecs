@@ -35,6 +35,6 @@ JOIN EventCube.DimUsers U ON S.User_Id = U.UserId;
 CREATE INDEX ndx_ecs_factsessions_userid_binaryversion ON EventCube.FactSessions (User_Id, BinaryVersion);
 CREATE INDEX ndx_ecs_factsessions_userid_apptypeid ON EventCube.FactSessions (User_Id, AppTypeId);
 CREATE INDEX ndx_ecs_factsessions_userid ON EventCube.FactSessions (User_Id);
-
+CREATE INDEX ndx_ecs_factsessions_applicationid_timestamp ON EventCube.FactSessions(ApplicationId, Timestamp);
 
 
