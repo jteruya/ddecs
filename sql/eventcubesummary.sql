@@ -199,3 +199,8 @@ LEFT OUTER JOIN
 -- Create the View for Reporter user 
 CREATE OR REPLACE VIEW report.v_eventcubesummary AS
 SELECT * FROM EventCube.EventCubeSummary;
+
+-- Grant usage
+GRANT USAGE ON SCHEMA eventcube TO integrations;
+GRANT SELECT ON ALL TABLES IN SCHEMA eventcube TO integrations;
+
