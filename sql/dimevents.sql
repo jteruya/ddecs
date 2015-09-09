@@ -1,5 +1,3 @@
-DROP TABLE IF EXISTS EventCube.DimEvents;
-
 --===============================================================================================
 -- Base data on the Application source records. 
 -- * Upstream dependency on DimUsers. 
@@ -13,7 +11,9 @@ DROP TABLE IF EXISTS EventCube.DimEvents;
 -- The above flagging transformations are handled differently depending on source table logic. 
 --===============================================================================================
 
-CREATE TABLE EventCube.DimEvents AS
+TRUNCATE TABLE EventCube.DimEvents;
+VACUUM EventCube.DimEvents;
+INSERT INTO EventCube.DimEvents
 SELECT DISTINCT A.ApplicationId, TRIM(A.Name) AS Name,
 
 CAST(StartDate AS DATE) AS StartDate,
@@ -69,4 +69,4 @@ LEFT OUTER JOIN
 ) S
 ON U.ApplicationId = S.ApplicationId;
 
-CREATE INDEX ndx_ecs_dimevents_applicationid ON EventCube.DimEvents (ApplicationId);
+--CREATE INDEX ndx_ecs_dimevents_applicationid ON EventCube.DimEvents (ApplicationId);
