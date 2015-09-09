@@ -1,17 +1,21 @@
-DROP TABLE IF EXISTS EventCube.EventCubeSummary CASCADE;  
-
 --==========================================================
 -- Aggregation on the User Cube Summary at the Event level
 -- * Upstream dependency on User Cube Summary
 --==========================================================
 
-CREATE TABLE EventCube.EventCubeSummary AS
+TRUNCATE TABLE EventCube.EventCubeSummary;
+VACUUM EventCube.EventCubeSummary;
+INSERT INTO EventCube.EventCubeSummary
 SELECT 
+        --== Application Metadata
         S.ApplicationId, 
         Name, 
         StartDate, 
         EndDate,
+        BinaryVersion,
         OpenEvent, 
+        
+        --== Feature Indicators
         LeadScanning, 
         SurveysOn, 
         InteractiveMap, 
@@ -26,21 +30,28 @@ SELECT
         PeopleMatching, 
         SocialNetworks, 
         RatingsOn,
+        
+        --== SalesForce Metadata
         EventType, 
         EventSize, 
         AccountCustomerDomain, 
         ServiceTierName, 
         App365Indicator, 
         OwnerName,
-        BinaryVersion,
+        
+        --== Device Fact Aggregates
         COALESCE(Registrants,0) AS Registrants, 
-        COALESCE(Downloads,0) AS Downloads, 
+        COALESCE(UniqueDevices,0) AS UniqueDevices, 
+        
+        --== User Fact Aggregates
         Users, 
         UsersActive, 
         UsersEngaged,
         UsersFacebook, 
         UsersTwitter, 
         UsersLinkedIn, 
+        
+        --== Fact Data
         Sessions, 
         Posts, 
         PostsImage, 
@@ -57,12 +68,16 @@ SELECT
         Surveys,
         COALESCE(PromotedPosts,0) AS PromotedPosts, 
         COALESCE(GlobalPushNotifications,0) AS GlobalPushNotifications,
-        ADOPTION_FOOL.Adoption, 
         COALESCE(E.Exhibitors,0) AS Exhibitors, 
         COALESCE(PC.Polls,0) AS Polls, 
-        COALESCE(PR.PollResponses,0) AS PollResponses
+        COALESCE(PR.PollResponses,0) AS PollResponses,
+        
+        --== Calculated Rates
+        ADOPTION_FOOL.Adoption
 FROM
-(       SELECT 
+--== Basic Aggregate from UserCubeSummary
+(       
+        SELECT 
                 S.ApplicationId, 
                 Name, 
                 StartDate, 
@@ -112,9 +127,11 @@ FROM
         FROM EventCube.UserCubeSummary S
         JOIN EventCube.DimEventBinaryVersion B ON S.ApplicationId = B.Applicationid
         GROUP BY S.ApplicationId, Name, StartDate, EndDate, OpenEvent, LeadScanning, SurveysOn, InteractiveMap, Leaderboard, Bookmarking, Photofeed, AttendeesList, QRCode, ExhibitorReqInfo, ExhibitorMsg, PrivateMsging, PeopleMatching, SocialNetworks, RatingsOn, EventType, EventSize, AccountCustomerDomain, ServiceTierName, App365Indicator, OwnerName, B.BinaryVersion
+        
 ) S
+--== Get the Registrant Count (Users listed in the App, for Closed Events)
 LEFT OUTER JOIN
-( 
+(
         SELECT 
                 u.ApplicationId, 
                 COUNT(DISTINCT u.UserId) AS Registrants
@@ -123,13 +140,20 @@ LEFT OUTER JOIN
         WHERE u.IsDisabled = 0 AND a.CanRegister = 'false'
         GROUP BY u.ApplicationId
 ) R ON S.ApplicationId = R.ApplicationId
+--== Get the count of Unique Devices that have accessed the Event App
 LEFT OUTER JOIN
 ( 
-        SELECT Application_Id AS ApplicationId, COUNT(*) AS Downloads 
+        SELECT Application_Id AS ApplicationId, COUNT(*) AS UniqueDevices 
         FROM (
                 SELECT DISTINCT Device_Id, Application_Id FROM PUBLIC.Fact_Sessions_Old
         ) t GROUP BY Application_Id
 ) D ON S.ApplicationId = D.ApplicationId
+--========================================================================================================================
+--
+--== Additional Event-Level Fact Data
+--
+--========================================================================================================================
+--== PROMOTED POSTS
 LEFT OUTER JOIN
 ( 
         SELECT 
@@ -138,6 +162,7 @@ LEFT OUTER JOIN
         FROM PUBLIC.Ratings_PromotedPosts
         GROUP BY ApplicationId
 ) P ON S.ApplicationId = P.ApplicationId
+--== GLOBAL MESSAGES
 LEFT OUTER JOIN
 ( 
         SELECT 
@@ -146,6 +171,7 @@ LEFT OUTER JOIN
         FROM PUBLIC.Ratings_GlobalMessages
         GROUP BY ApplicationId
 ) G ON S.ApplicationId = G.ApplicationId
+--== Adoption Percentage
 LEFT OUTER JOIN
 ( 
         SELECT 
@@ -164,6 +190,7 @@ LEFT OUTER JOIN
         (SELECT ApplicationId, UserId FROM EventCube.Agg_Session_Per_AppUser) S ON U.ApplicationId = S.ApplicationId AND U.UserId = S.UserId
         GROUP BY U.ApplicationId
 ) ADOPTION_FOOL ON S.ApplicationId = ADOPTION_FOOL.ApplicationId
+--== Exhibitors
 LEFT OUTER JOIN
 ( 
         SELECT 
@@ -174,6 +201,7 @@ LEFT OUTER JOIN
         WHERE ListTypeId = 3 AND i.IsDisabled = 0 AND i.IsArchived = 'false'
         GROUP BY i.ApplicationId
 ) E ON E.ApplicationId = S.ApplicationId
+--== Polls Set Up
 LEFT OUTER JOIN
 ( 
         SELECT 
@@ -183,6 +211,7 @@ LEFT OUTER JOIN
         WHERE S.IsPoll = 'true'
         GROUP BY S.ApplicationId
 ) PC ON PC.ApplicationId = S.ApplicationId
+--== Polls Responses
 LEFT OUTER JOIN
 ( 
         SELECT 
