@@ -125,7 +125,7 @@ FROM
                 SUM(Reviews) AS Reviews, 
                 SUM(Surveys) AS Surveys
         FROM EventCube.UserCubeSummary S
-        JOIN EventCube.DimEventBinaryVersion B ON S.ApplicationId = B.Applicationid
+        JOIN EventCube.V_DimEventBinaryVersion B ON S.ApplicationId = B.Applicationid
         GROUP BY S.ApplicationId, Name, StartDate, EndDate, OpenEvent, LeadScanning, SurveysOn, InteractiveMap, Leaderboard, Bookmarking, Photofeed, AttendeesList, QRCode, ExhibitorReqInfo, ExhibitorMsg, PrivateMsging, PeopleMatching, SocialNetworks, RatingsOn, EventType, EventSize, AccountCustomerDomain, ServiceTierName, App365Indicator, OwnerName, B.BinaryVersion
         
 ) S
