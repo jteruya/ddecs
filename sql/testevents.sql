@@ -19,8 +19,8 @@ CREATE TEMPORARY TABLE BaseSessions AS
 SELECT 
   app.*, 
   CASE
-    WHEN Binary_Version IS NULL THEN 0
-    WHEN Binary_Version ~ '[A-Za-z]' THEN 0
+    WHEN Binary_Version IS NULL THEN NULL
+    WHEN Binary_Version ~ '[A-Za-z]' THEN NULL
     WHEN LENGTH(Binary_Version) - LENGTH(REGEXP_REPLACE(Binary_Version,'\.','','g')) / LENGTH('.') = 1 THEN (CAST(SUBSTRING(Binary_Version,0,POSITION('.' IN Binary_Version)) AS INT) * 10000) + (CAST(SUBSTRING(Binary_Version,POSITION('.' IN Binary_Version) + 1,999) AS INT) * 100)
     WHEN LENGTH(Binary_Version) - LENGTH(REGEXP_REPLACE(Binary_Version,'\.','','g')) / LENGTH('.') = 2 THEN (CAST(SUBSTRING(Binary_Version,0,POSITION('.' IN Binary_Version)) AS INT) * 10000) + (CAST(SUBSTRING(SUBSTRING(Binary_Version,POSITION('.' IN Binary_Version)+1,999),0,POSITION('.' IN SUBSTRING(Binary_Version,POSITION('.' IN Binary_Version)+1,999))) AS INT) * 100) + (CAST(CASE WHEN SUBSTRING(SUBSTRING(Binary_Version,POSITION('.' IN Binary_Version)+1,999),CAST(POSITION('.' IN SUBSTRING(Binary_Version,POSITION('.' IN Binary_Version)+1,999)) AS INT) + 1,999) LIKE '%.%' THEN SUBSTRING(SUBSTRING(SUBSTRING(Binary_Version,POSITION('.' IN Binary_Version)+1,999),CAST(POSITION('.' IN SUBSTRING(Binary_Version,POSITION('.' IN Binary_Version)+1,999)) AS INT) + 1,999),0,POSITION('.' IN SUBSTRING(SUBSTRING(Binary_Version,POSITION('.' IN Binary_Version)+1,999),CAST(POSITION('.' IN SUBSTRING(Binary_Version,POSITION('.' IN Binary_Version)+1,999)) AS INT) + 1,999))) ELSE SUBSTRING(SUBSTRING(Binary_Version,POSITION('.' IN Binary_Version)+1,999),CAST(POSITION('.' IN SUBSTRING(Binary_Version,POSITION('.' IN Binary_Version)+1,999)) AS INT) + 1,999) END AS INT))
     WHEN LENGTH(Binary_Version) - LENGTH(REGEXP_REPLACE(Binary_Version,'\.','','g')) / LENGTH('.') = 3 THEN (CAST(SUBSTRING(Binary_Version,0,POSITION('.' IN Binary_Version)) AS INT) * 10000) + (CAST(SUBSTRING(SUBSTRING(Binary_Version,POSITION('.' IN Binary_Version)+1,999),0,POSITION('.' IN SUBSTRING(Binary_Version,POSITION('.' IN Binary_Version)+1,999))) AS INT) * 100) + (CAST(CASE WHEN SUBSTRING(SUBSTRING(Binary_Version,POSITION('.' IN Binary_Version)+1,999),CAST(POSITION('.' IN SUBSTRING(Binary_Version,POSITION('.' IN Binary_Version)+1,999)) AS INT) + 1,999) LIKE '%.%' THEN SUBSTRING(SUBSTRING(SUBSTRING(Binary_Version,POSITION('.' IN Binary_Version)+1,999),CAST(POSITION('.' IN SUBSTRING(Binary_Version,POSITION('.' IN Binary_Version)+1,999)) AS INT) + 1,999),0,POSITION('.' IN SUBSTRING(SUBSTRING(Binary_Version,POSITION('.' IN Binary_Version)+1,999),CAST(POSITION('.' IN SUBSTRING(Binary_Version,POSITION('.' IN Binary_Version)+1,999)) AS INT) + 1,999))) ELSE SUBSTRING(SUBSTRING(Binary_Version,POSITION('.' IN Binary_Version)+1,999),CAST(POSITION('.' IN SUBSTRING(Binary_Version,POSITION('.' IN Binary_Version)+1,999)) AS INT) + 1,999) END AS INT))
@@ -56,7 +56,10 @@ FROM (SELECT
 --Identify Session Aggregate at User-level
 DROP TABLE IF EXISTS EventCube.Agg_Session_per_AppUser CASCADE;
 CREATE TABLE EventCube.Agg_Session_per_AppUser AS 
-SELECT ApplicationId, UserId, MIN(DT) AS FirstTimestamp, MAX(DT) AS LastTimestamp, MIN(Binary_Version) AS FirstBinaryVersion, MAX(Binary_Version) AS LastBinaryVersion, MIN(BinaryVersionInt) AS FirstBinaryVersionInt, MAX(BinaryVersionInt) AS LastBinaryVersionInt, 
+SELECT ApplicationId, UserId, 
+MIN(DT) AS FirstTimestamp, MAX(DT) AS LastTimestamp, 
+--MIN(Binary_Version) AS FirstBinaryVersion, MAX(Binary_Version) AS LastBinaryVersion, 
+MIN(BinaryVersionInt) AS FirstBinaryVersionInt, MAX(BinaryVersionInt) AS LastBinaryVersionInt, 
 COUNT(*) AS Sessions,
 SUM(CASE WHEN AppTypeId = 1 THEN 1 ELSE 0 END) AS iPhone_Sessions,
 SUM(CASE WHEN AppTypeId = 2 THEN 1 ELSE 0 END) AS iPad_Sessions,
