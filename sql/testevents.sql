@@ -58,7 +58,7 @@ DROP TABLE IF EXISTS EventCube.Agg_Session_per_AppUser CASCADE;
 CREATE TABLE EventCube.Agg_Session_per_AppUser AS 
 SELECT ApplicationId, UserId, 
 MIN(DT) AS FirstTimestamp, MAX(DT) AS LastTimestamp, 
---MIN(Binary_Version) AS FirstBinaryVersion, MAX(Binary_Version) AS LastBinaryVersion, 
+MIN(Binary_Version) AS FirstBinaryVersion, MAX(Binary_Version) AS LastBinaryVersion, 
 MIN(BinaryVersionInt) AS FirstBinaryVersionInt, MAX(BinaryVersionInt) AS LastBinaryVersionInt, 
 COUNT(*) AS Sessions,
 SUM(CASE WHEN AppTypeId = 1 THEN 1 ELSE 0 END) AS iPhone_Sessions,
