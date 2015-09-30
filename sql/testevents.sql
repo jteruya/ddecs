@@ -9,13 +9,14 @@ DROP TABLE IF EXISTS EventCube.BaseApps;
 CREATE TABLE EventCube.BaseApps AS 
 SELECT A.ApplicationId, A.Name FROM AuthDB_Applications A
 JOIN PUBLIC.AuthDB_Bundles B ON A.BundleId = B.BundleId
-WHERE (CURRENT_TIMESTAMP - A.StartDate <= INTERVAL'13 months' OR A.StartDate IS NULL) --Filter on date range we're processing
+WHERE StartDate >= CAST(EXTRACT(YEAR FROM CURRENT_DATE - INTERVAL'13 months')||'-'||EXTRACT(MONTH FROM CURRENT_DATE - INTERVAL'13 months')||'-01 00:00:00' AS TIMESTAMP) --Past 13 months
 --== Static Test Event filters
 AND A.Name NOT LIKE '%DoubleDutch%' AND B.Name NOT LIKE '%DoubleDutch%' AND UPPER(B.Name) NOT IN ('PRIDE','DDQA')
-AND A.BundleId NOT IN ('00000000-0000-0000-0000-000000000000','025AA15B-CE74-40AA-A4CC-04028401C8B3','89FD8F03-0D59-41AB-A6A7-2237D8AC4EB2','5A46600A-156A-441E-B594-40F7DEFB54F2','F95FE4A7-E86A-4661-AC59-8B423F1F540A','34B4E501-3F31-46A0-8F2A-0FB6EA5E4357','09E25995-8D8F-4C2D-8F55-15BA22595E11','5637BE65-6E3F-4095-BEB8-115849B5584A','9F3489D7-C93C-4C8B-8603-DDA6A9061116','D0F56154-E8E7-4566-A845-D3F47B8B35CC','BC35D4CE-C571-4F91-834A-A8136CA137C4','3E3FDA3D-A606-4013-8DDF-711A1871BD12','75CE91A5-BCC0-459A-B479-B3956EA09ABC','384D052E-0ABD-44D1-A643-BC590135F5A0','B752A5B3-AA53-4BCF-9F52-D5600474D198','15740A5A-25D8-4DC6-A9ED-7F610FF94085','0CBC9D00-1E6D-4DB3-95FC-C5FBB156C6DE','F0C4B2DB-A743-4FB2-9E8F-A80463E52B55','8A995A58-C574-421B-8F82-E3425D9054B0','6DBB91C8-6544-48EF-8B8D-A01B435F3757','F21325D8-3A43-4275-A8B8-B4B6E3F62DE0','DE8D1832-B4EA-4BD2-AB4B-732321328B04','7E289A59-E573-454C-825B-CF31B74C8506');
+AND A.BundleId NOT IN ('00000000-0000-0000-0000-000000000000','025AA15B-CE74-40AA-A4CC-04028401C8B3','89FD8F03-0D59-41AB-A6A7-2237D8AC4EB2','5A46600A-156A-441E-B594-40F7DEFB54F2','F95FE4A7-E86A-4661-AC59-8B423F1F540A','34B4E501-3F31-46A0-8F2A-0FB6EA5E4357','09E25995-8D8F-4C2D-8F55-15BA22595E11','5637BE65-6E3F-4095-BEB8-115849B5584A','9F3489D7-C93C-4C8B-8603-DDA6A9061116','D0F56154-E8E7-4566-A845-D3F47B8B35CC','BC35D4CE-C571-4F91-834A-A8136CA137C4','3E3FDA3D-A606-4013-8DDF-711A1871BD12','75CE91A5-BCC0-459A-B479-B3956EA09ABC','384D052E-0ABD-44D1-A643-BC590135F5A0','B752A5B3-AA53-4BCF-9F52-D5600474D198','15740A5A-25D8-4DC6-A9ED-7F610FF94085','0CBC9D00-1E6D-4DB3-95FC-C5FBB156C6DE','F0C4B2DB-A743-4FB2-9E8F-A80463E52B55','8A995A58-C574-421B-8F82-E3425D9054B0','6DBB91C8-6544-48EF-8B8D-A01B435F3757','F21325D8-3A43-4275-A8B8-B4B6E3F62DE0','DE8D1832-B4EA-4BD2-AB4B-732321328B04','7E289A59-E573-454C-825B-CF31B74C8506')
+;
 
 --Get the initial set of Sessions we'll be working with
-CREATE TEMPORARY TABLE BaseSessions AS 
+CREATE TEMPORARY TABLE BaseSessions TABLESPACE FastStorage AS 
 SELECT 
   app.*, 
   CASE
@@ -30,20 +31,24 @@ SELECT
 --SUBSTRING(SUBSTRING(Binary_Version,POSITION('.' IN Binary_Version)+1,999),0,POSITION('.' IN SUBSTRING(Binary_Version,POSITION('.' IN Binary_Version)+1,999))) AS BIN2,
 --CASE WHEN SUBSTRING(SUBSTRING(Binary_Version,POSITION('.' IN Binary_Version)+1,999),CAST(POSITION('.' IN SUBSTRING(Binary_Version,POSITION('.' IN Binary_Version)+1,999)) AS INT) + 1,999) LIKE '%.%' THEN SUBSTRING(SUBSTRING(SUBSTRING(Binary_Version,POSITION('.' IN Binary_Version)+1,999),CAST(POSITION('.' IN SUBSTRING(Binary_Version,POSITION('.' IN Binary_Version)+1,999)) AS INT) + 1,999),0,POSITION('.' IN SUBSTRING(SUBSTRING(Binary_Version,POSITION('.' IN Binary_Version)+1,999),CAST(POSITION('.' IN SUBSTRING(Binary_Version,POSITION('.' IN Binary_Version)+1,999)) AS INT) + 1,999))) ELSE SUBSTRING(SUBSTRING(Binary_Version,POSITION('.' IN Binary_Version)+1,999),CAST(POSITION('.' IN SUBSTRING(Binary_Version,POSITION('.' IN Binary_Version)+1,999)) AS INT) + 1,999) END AS BIN3,
 FROM (SELECT 
-        Application_id AS ApplicationId, 
-        User_Id AS UserId, 
-        Device_Id AS DeviceId, 
-        App_Type_Id AS AppTypeId, 
-        CASE WHEN Metrics_Type_Id = 1 THEN Start_Date ELSE End_Date END AS DT,
+        SRC,
+        ApplicationId,
+        UserId, 
+        DeviceId, 
+        AppTypeId, 
+        CASE WHEN MetricTypeId = 1 THEN StartDate WHEN MetricTypeId = 2 THEN EndDate ELSE EndDate END AS DT,
+        MetricTypeId,
+        StartDate,
+        EndDate,
         CASE 
-          WHEN Binary_Version ~ '[A-Za-z]' AND Binary_Version LIKE '%-%' THEN SUBSTRING(REGEXP_REPLACE(Binary_Version,'[A-Za-z]','','g'),0,POSITION('-' IN REGEXP_REPLACE(Binary_Version,'[A-Za-z]','','g')))
-          WHEN Binary_Version ~ '[A-Za-z]' AND Binary_Version NOT LIKE '%-%' THEN SUBSTRING(REGEXP_REPLACE(Binary_Version,'[A-Za-z]','','g'),0,POSITION('[A-Za-z]' IN REGEXP_REPLACE(Binary_Version,'[A-Za-z]','','g')))
-          ELSE Binary_Version
+          WHEN BinaryVersion ~ '[A-Za-z]' AND BinaryVersion LIKE '%-%' THEN SUBSTRING(REGEXP_REPLACE(BinaryVersion,'[A-Za-z]','','g'),0,POSITION('-' IN REGEXP_REPLACE(BinaryVersion,'[A-Za-z]','','g')))
+          WHEN BinaryVersion ~ '[A-Za-z]' AND BinaryVersion NOT LIKE '%-%' THEN SUBSTRING(REGEXP_REPLACE(BinaryVersion,'[A-Za-z]','','g'),0,POSITION('[A-Za-z]' IN REGEXP_REPLACE(BinaryVersion,'[A-Za-z]','','g')))
+          ELSE BinaryVersion
         END AS Binary_Version
-      FROM PUBLIC.Fact_Sessions_Old
-      WHERE (Binary_Version IS NULL OR UPPER(Binary_Version) NOT LIKE '%FLOCK%') --Don't include any FLOCK/Test eapps
-      AND User_id IS NOT NULL
-      AND Application_Id IN (SELECT ApplicationId FROM EventCube.BaseApps) --Base Apps we'll be cubing
+      FROM PUBLIC.V_Fact_Sessions_ALL
+      WHERE (BinaryVersion IS NULL OR UPPER(BinaryVersion) NOT LIKE '%FLOCK%') --Don't include any FLOCK/Test eapps
+      AND UserId IS NOT NULL
+      AND ApplicationId IN (SELECT ApplicationId FROM EventCube.BaseApps) --Base Apps we'll be cubing
       ) app
 ;
 
@@ -55,7 +60,7 @@ FROM (SELECT
 
 --Identify Session Aggregate at User-level
 DROP TABLE IF EXISTS EventCube.Agg_Session_per_AppUser CASCADE;
-CREATE TABLE EventCube.Agg_Session_per_AppUser AS 
+CREATE TABLE EventCube.Agg_Session_per_AppUser TABLESPACE FastStorage AS 
 SELECT ApplicationId, UserId, 
 MIN(DT) AS FirstTimestamp, MAX(DT) AS LastTimestamp, 
 MIN(Binary_Version) AS FirstBinaryVersion, MAX(Binary_Version) AS LastBinaryVersion, 
@@ -157,5 +162,63 @@ DELETE FROM EventCube.TestEvents WHERE ApplicationId IN (SELECT ApplicationId FR
 VACUUM EventCube.TestEvents;
 
 --======================================================================================================================================================--
+
+--======================================--
+-- Transformations for Downstream Usage --
+--======================================--
+
+--Identify the Sessions we'll be looking at 
+CREATE TEMPORARY TABLE Session_StartEnds TABLESPACE FastStorage AS 
+SELECT *, CAST(EXTRACT(Year FROM CAST(TS AS Date)) AS TEXT)||'-'||CASE WHEN CAST(EXTRACT(Month FROM CAST(TS AS Date)) AS INT) < 10 THEN '0' ELSE '' END||CAST(EXTRACT(Month FROM CAST(TS AS Date)) AS TEXT) AS YYYY_MM 
+FROM (
+SELECT 
+Src,
+ApplicationId, 
+UserId, 
+CASE WHEN MetricTypeId = 1 THEN StartDate WHEN MetricTypeId = 2 THEN EndDate END AS TS, 
+CASE WHEN MetricTypeId = 1 THEN 'Start' WHEN MetricTypeId = 2 THEN 'End' END AS TS_Type
+FROM BaseSessions
+WHERE MetricTypeId IS NOT NULL AND ApplicationId NOT IN (SELECT ApplicationId FROM EventCube.TestEvents)
+--UNION ALL
+--SELECT Src, ApplicationId, UserId, StartDate AS TS, 'Start' AS TS_Type FROM BaseSessions WHERE MetricTypeId IS NULL AND ApplicationId NOT IN (SELECT ApplicationId FROM EventCube.TestEvents)
+--UNION ALL
+--SELECT Src, ApplicationId, UserId, EndDate AS TS, 'End' AS TS_Type FROM BaseSessions WHERE MetricTypeId IS NULL AND ApplicationId NOT IN (SELECT ApplicationId FROM EventCube.TestEvents)
+) t;
+
+CREATE INDEX ndx_sessionstartends_applicationid_userid_yyyymm ON Session_StartEnds (ApplicationId, UserId, YYYY_MM);
+CREATE INDEX ndx_sessionstartends_applicationid_userid_ts ON Session_StartEnds (ApplicationId, UserId, TS);
+
+--Identify the Durations per Each Session
+DROP TABLE IF EXISTS EventCube.Session_Durations TABLESPACE FastStorage;
+CREATE TABLE EventCube.Session_Durations AS
+SELECT ApplicationId, UserId, TS_Type, TS, NEXT_TS,
+CASE WHEN TS_Type = 'Start' AND NEXT_TS_Type = 'End' THEN NEXT_TS - TS  END AS Duration,
+CASE WHEN TS_Type = 'Start' AND NEXT_TS_Type = 'End' THEN CAST(EXTRACT(EPOCH FROM NEXT_TS - TS) AS NUMERIC) END AS Duration_Seconds,
+FROM (
+        SELECT ApplicationId, UserId, TS_Type, TS, MAX(TS) OVER (PARTITION BY ApplicationId, UserId ORDER BY ApplicationId, UserId, TS ROWS BETWEEN 1 FOLLOWING and 1 FOLLOWING) AS NEXT_TS, MAX(TS_Type) OVER (PARTITION BY ApplicationId, UserId ORDER BY ApplicationId, UserId, TS ROWS BETWEEN 1 FOLLOWING and 1 FOLLOWING) AS NEXT_TS_Type
+        FROM Session_StartEnds 
+        WHERE Src = 'Alfred'
+) t
+WHERE TS_Type = 'Start'
+UNION ALL
+SELECT ApplicationId, UserId, 'Session' AS TS_Type, StartDate AS TS, EndDate AS NEXT_TS, EndDate - StartDate AS Duration, CAST(EXTRACT(EPOCH FROM EndDate - StartDate) AS NUMERIC) AS Duration_Seconds FROM BaseSessions WHERE MetricTypeId IS NULL
+;
+
+CREATE INDEX ndx_session_durations_applicationid ON EventCube.Session_Durations (ApplicationId);
+
+--Identify User/Day Aggregate for Session Counts (for past 6 months)
+DROP TABLE IF EXISTS EventCube.Agg_Session_perUser_perDay CASCADE;
+CREATE TABLE EventCube.Agg_Session_perUser_perDay TABLESPACE FastStorage AS 
+SELECT CAST(EXTRACT(Year FROM CAST(StartDate AS Date)) AS TEXT)||'-'||CASE WHEN CAST(EXTRACT(Month FROM CAST(StartDate AS Date)) AS INT) < 10 THEN '0' ELSE '' END||CAST(EXTRACT(Month FROM CAST(StartDate AS Date)) AS TEXT) AS YYYY_MM, UserId, COUNT(*) AS Sessions
+FROM BaseSessions
+WHERE SRC = 'Alfred' AND MetricTypeId = 1 AND ApplicationId NOT IN (SELECT ApplicationId FROM EventCube.TestEvents) 
+AND StartDate >= CAST(CAST(EXTRACT(YEAR FROM CAST(CURRENT_DATE AS TIMESTAMP) - INTERVAL'6 months') AS TEXT) || '-' || CASE WHEN EXTRACT(MONTH FROM CAST(CURRENT_DATE AS TIMESTAMP) - INTERVAL'6 months') < 10 THEN '0' ELSE '' END || CAST(EXTRACT(MONTH FROM CAST(CURRENT_DATE AS TIMESTAMP) - INTERVAL'6 months') AS TEXT) || '-01 00:00:00' AS TIMESTAMP)
+GROUP BY 1,2
+UNION ALL
+SELECT CAST(EXTRACT(Year FROM CAST(StartDate AS Date)) AS TEXT)||'-'||CASE WHEN CAST(EXTRACT(Month FROM CAST(StartDate AS Date)) AS INT) < 10 THEN '0' ELSE '' END||CAST(EXTRACT(Month FROM CAST(StartDate AS Date)) AS TEXT) AS YYYY_MM, UserId, COUNT(*) AS Sessions
+FROM BaseSessions 
+WHERE SRC = 'Robin' AND ApplicationId NOT IN (SELECT ApplicationId FROM EventCube.TestEvents) 
+AND StartDate >= CAST(CAST(EXTRACT(YEAR FROM CAST(CURRENT_DATE AS TIMESTAMP) - INTERVAL'6 months') AS TEXT) || '-' || CASE WHEN EXTRACT(MONTH FROM CAST(CURRENT_DATE AS TIMESTAMP) - INTERVAL'6 months') < 10 THEN '0' ELSE '' END || CAST(EXTRACT(MONTH FROM CAST(CURRENT_DATE AS TIMESTAMP) - INTERVAL'6 months') AS TEXT) || '-01 00:00:00' AS TIMESTAMP)
+GROUP BY 1,2;
 
 
