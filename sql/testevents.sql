@@ -58,6 +58,20 @@ FROM (SELECT
 -- TRANSFORM --
 --===========--
 
+--Identify Devices Aggregate at Event-level
+DROP TABLE IF EXISTS EventCube.Agg_Devices_per_App CASCADE;
+CREATE TABLE EventCube.Agg_Devices_per_App TABLESPACE FastStorage AS 
+SELECT ApplicationId, COUNT(*) AS Devices FROM (SELECT DISTINCT ApplicationId, DeviceId FROM BaseSessions) t GROUP BY 1;
+
+CREATE INDEX ndx_agg_devices_App ON EventCube.Agg_Devices_per_App(ApplicationId);
+
+--Identify Devices Aggregate at User-level
+DROP TABLE IF EXISTS EventCube.Agg_Devices_per_User CASCADE;
+CREATE TABLE EventCube.Agg_Devices_per_User TABLESPACE FastStorage AS 
+SELECT UserId, COUNT(*) AS Devices FROM (SELECT DISTINCT UserId, DeviceId FROM BaseSessions) t GROUP BY 1;
+
+CREATE INDEX ndx_agg_devices_User ON EventCube.Agg_Devices_per_User(UserId);
+
 --Identify Session Aggregate at User-level
 DROP TABLE IF EXISTS EventCube.Agg_Session_per_AppUser CASCADE;
 CREATE TABLE EventCube.Agg_Session_per_AppUser TABLESPACE FastStorage AS 

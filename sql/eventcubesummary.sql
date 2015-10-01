@@ -12,7 +12,7 @@ SELECT
         Name, 
         StartDate, 
         EndDate,
-        BinaryVersion,
+        BV.BinaryVersion,
         OpenEvent, 
         
         --== Feature Indicators
@@ -41,7 +41,7 @@ SELECT
         
         --== Device Fact Aggregates
         COALESCE(Registrants,0) AS Registrants, 
-        COALESCE(UniqueDevices,0) AS UniqueDevices, 
+        COALESCE(D.Devices,0) AS UniqueDevices, 
         
         --== User Fact Aggregates
         Users, 
@@ -103,7 +103,6 @@ FROM
                 ServiceTierName, 
                 App365Indicator, 
                 OwnerName,
-                B.BinaryVersion,
                 COUNT(*) AS Users, 
                 SUM(Active) AS UsersActive, 
                 SUM(Engaged) UsersEngaged,
@@ -125,10 +124,11 @@ FROM
                 SUM(Reviews) AS Reviews, 
                 SUM(Surveys) AS Surveys
         FROM EventCube.UserCubeSummary S
-        JOIN EventCube.V_DimEventBinaryVersion B ON S.ApplicationId = B.Applicationid
-        GROUP BY S.ApplicationId, Name, StartDate, EndDate, OpenEvent, LeadScanning, SurveysOn, InteractiveMap, Leaderboard, Bookmarking, Photofeed, AttendeesList, QRCode, ExhibitorReqInfo, ExhibitorMsg, PrivateMsging, PeopleMatching, SocialNetworks, RatingsOn, EventType, EventSize, AccountCustomerDomain, ServiceTierName, App365Indicator, OwnerName, B.BinaryVersion
+        GROUP BY S.ApplicationId, Name, StartDate, EndDate, OpenEvent, LeadScanning, SurveysOn, InteractiveMap, Leaderboard, Bookmarking, Photofeed, AttendeesList, QRCode, ExhibitorReqInfo, ExhibitorMsg, PrivateMsging, PeopleMatching, SocialNetworks, RatingsOn, EventType, EventSize, AccountCustomerDomain, ServiceTierName, App365Indicator, OwnerName
         
 ) S
+--== Get the Binary Version that was the majority
+JOIN EventCube.V_DimEventBinaryVersion BV ON S.ApplicationId = BV.Applicationid
 --== Get the Registrant Count (Users listed in the App, for Closed Events)
 LEFT OUTER JOIN
 (
@@ -141,13 +141,7 @@ LEFT OUTER JOIN
         GROUP BY u.ApplicationId
 ) R ON S.ApplicationId = R.ApplicationId
 --== Get the count of Unique Devices that have accessed the Event App
-LEFT OUTER JOIN
-( 
-        SELECT Application_Id AS ApplicationId, COUNT(*) AS UniqueDevices 
-        FROM (
-                SELECT DISTINCT Device_Id, Application_Id FROM PUBLIC.Fact_Sessions_Old
-        ) t GROUP BY Application_Id
-) D ON S.ApplicationId = D.ApplicationId
+LEFT OUTER JOIN EventCube.Agg_Devices_per_App D ON S.ApplicationId = D.ApplicationId
 --========================================================================================================================
 --
 --== Additional Event-Level Fact Data
