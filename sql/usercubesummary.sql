@@ -103,7 +103,11 @@ LEFT OUTER JOIN (SELECT UserId, COUNT(*) AS Surveys FROM EventCube.V_FactSurveys
 TRUNCATE TABLE EventCube.STG_UserCubeSummary_INSERT;
 VACUUM EventCube.STG_UserCubeSummary_INSERT;
 INSERT INTO EventCube.STG_UserCubeSummary_INSERT
-SELECT * FROM EventCube.STG_UserCubeSummary WHERE UserId NOT IN (SELECT UserId FROM EventCube.UserCubeSummary);
+SELECT ApplicationId, Name, StartDate, EndDate, GlobalUserId, UserId, FirstTimestamp, LastTimestamp, Facebook, Twitter, LinkedIn, Device, DeviceType, BinaryVersion, Active, Engaged, Sessions, Posts, PostsImage, PostsItem, Likes, Comments, TotalBookmarks, ImportedBookmarks, Follows, CheckIns, CheckInsHeadCount, Ratings, Reviews, Surveys, OpenEvent, LeadScanning, SurveysOn, InteractiveMap, Leaderboard, Bookmarking, PhotoFeed, AttendeesList, QRCode, ExhibitorReqInfo, ExhibitorMsg, PrivateMsging, PeopleMatching, SocialNetworks, RatingsOn, EventType, EventSize, AccountCustomerDomain, ServiceTierName, App365Indicator, OwnerName FROM (
+SELECT a.*, b.UserId AS bUserId FROM EventCube.STG_UserCubeSummary a
+--Forced to use the Left Join instead of NOT IN logic (due to performance)
+LEFT JOIN (SELECT DISTINCT UserId FROM EventCube.UserCubeSummary) b ON a.UserId = b.UserId
+) t WHERE bUserId IS NULL;
 
 --Identify the Users that are in UserCubeSummary (so we can UPDATE them)
 TRUNCATE TABLE EventCube.STG_UserCubeSummary_UPDATE;
