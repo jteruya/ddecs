@@ -101,7 +101,10 @@ AND UserId != 0;
 TRUNCATE TABLE EventCube.STG_DimUsers_INSERT;
 VACUUM EventCube.STG_DimUsers_INSERT;
 INSERT INTO EventCube.STG_DimUsers_INSERT
-SELECT *, CURRENT_TIMESTAMP FROM EventCube.STG_DimUsers WHERE UserId NOT IN (SELECT UserId FROM EventCube.DimUsers);
+SELECT FirstTimestamp, LastTimestamp, ApplicationId, GlobalUserId, UserId, CURRENT_TIMESTAMP FROM (
+SELECT a.*, b.UserId AS bUserId FROM EventCube.STG_DimUsers a 
+LEFT JOIN (SELECT DISTINCT UserId FROM EventCube.DimUsers) b ON a.UserId = b.UserId
+) t WHERE bUserId IS NULL;
 
 --Identify the Events that were previously marked as Test Events, but are no longer considered Test Events based on today's Sessions calculation
 TRUNCATE TABLE EventCube.STG_DimUsers_UPDATE;
