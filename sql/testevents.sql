@@ -206,7 +206,8 @@ FROM
 -- Identify the Test Events through two methods:
 -- 1a. Identify if the naming of the Event has anything to do with a DoubleDutch test/internal/QA Event
 -- 1b. Identify if the specific Bundle Unique ID is tied to a test event (as specified by internal users)
--- 2.  Check if the Event has 20 or fewer Users across all Event sessions (or no Event sessions at all)
+-- 2a. Check if the Event has 20 or fewer Users across all Event sessions (or no Event sessions at all)...
+-- 2b. ... or if the Event does have < 20 Users across all Event sessions, whether it was entered in SalesForce as a legit event
 --============================================================================================================
 ( SELECT DISTINCT ApplicationId, TRIM(A.Name) AS NAME
   FROM PUBLIC.AuthDB_Applications A
@@ -224,9 +225,20 @@ FROM
   -- 2 --
   SELECT ApplicationId, TRIM(Name) AS NAME
   FROM (
+        -- 2a --
         SELECT A.ApplicationId, A.Name, COUNT(*)
         FROM EventCube.BaseApps A
         LEFT JOIN EventCube.Agg_Session_per_AppUser S ON A.ApplicationId = S.ApplicationId
+        -- 2b --
+        WHERE A.ApplicationId NOT IN (
+        
+                -- Identify the events for which the opportunity looks like a regular app that will be cut for a real event
+                SELECT DISTINCT UPPER(a.SF_Event_Id_CMS__c) AS ApplicationId
+                FROM Integrations.Implementation__c a
+                JOIN Integrations.Opportunity b ON a.SF_Opportunity__c = b.SF_Id
+                WHERE b.SF_StageName = 'Closed Won'
+                AND a.SF_Stage__c IN ('3. Assembly','4. Pre-Release','5. Released','COMPLETE')
+        )
         GROUP BY 1,2
         HAVING COUNT(*) <= 20
   ) t
