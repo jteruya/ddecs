@@ -125,6 +125,7 @@ WHERE SRC = 'Robin' AND ApplicationId NOT IN (SELECT ApplicationId FROM EventCub
 AND StartDate >= CAST(CAST(EXTRACT(YEAR FROM CAST(CURRENT_DATE AS TIMESTAMP) - INTERVAL'6 months') AS TEXT) || '-' || CASE WHEN EXTRACT(MONTH FROM CAST(CURRENT_DATE AS TIMESTAMP) - INTERVAL'6 months') < 10 THEN '0' ELSE '' END || CAST(EXTRACT(MONTH FROM CAST(CURRENT_DATE AS TIMESTAMP) - INTERVAL'6 months') AS TEXT) || '-01 00:00:00' AS TIMESTAMP)
 GROUP BY 1,2;
 
+/*
 --======================================--
 -- Transformations for Downstream Usage --
 --======================================--
@@ -189,6 +190,8 @@ SELECT ApplicationId, UserId, 'Session' AS TS_Type, StartDate AS TS, EndDate AS 
 ;
 
 CREATE INDEX ndx_session_durations_applicationid ON EventCube.Session_Durations (ApplicationId);
+
+*/
 
 --======================================================================================================================================================--
 
