@@ -134,6 +134,7 @@ SET
   ExhibitorReqInfo = EventCube.STG_UserCubeSummary_UPDATE.ExhibitorReqInfo,
   ExhibitorMsg = EventCube.STG_UserCubeSummary_UPDATE.ExhibitorMsg,
   PrivateMsging = EventCube.STG_UserCubeSummary_UPDATE.PrivateMsging,
+  PeopleMatching = EventCube.STG_UserCubeSummary_UPDATE.PeopleMatching,
   SocialNetworks = EventCube.STG_UserCubeSummary_UPDATE.SocialNetworks,
   RatingsOn = EventCube.STG_UserCubeSummary_UPDATE.RatingsOn,
   EventType = EventCube.STG_UserCubeSummary_UPDATE.EventType,
