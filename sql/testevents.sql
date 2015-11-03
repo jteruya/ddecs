@@ -33,7 +33,8 @@ SELECT
 FROM (SELECT 
         SRC,
         ApplicationId,
-        UserId, 
+        UserId,
+        GlobalUserId,
         DeviceId, 
         AppTypeId, 
         CASE WHEN MetricTypeId = 1 THEN StartDate WHEN MetricTypeId = 2 THEN EndDate ELSE EndDate END AS DT,
@@ -47,8 +48,29 @@ FROM (SELECT
         END AS Binary_Version
       FROM PUBLIC.V_Fact_Sessions_ALL
       WHERE (BinaryVersion IS NULL OR UPPER(BinaryVersion) NOT LIKE '%FLOCK%') --Don't include any FLOCK/Test eapps
-      AND UserId IS NOT NULL
+      AND (UserId IS NOT NULL OR GlobalUserId IS NOT NULL)
       AND ApplicationId IN (SELECT ApplicationId FROM EventCube.BaseApps) --Base Apps we'll be cubing
+      UNION ALL
+      SELECT 
+        SRC,
+        a.ApplicationId,
+        b.UserId,
+        a.DeviceId, 
+        a.AppTypeId, 
+        CASE WHEN a.MetricTypeId = 1 THEN a.StartDate WHEN a.MetricTypeId = 2 THEN a.EndDate ELSE a.EndDate END AS DT,
+        a.MetricTypeId,
+        a.StartDate,
+        a.EndDate,
+        CASE 
+          WHEN a.BinaryVersion ~ '[A-Za-z]' AND a.BinaryVersion LIKE '%-%' THEN SUBSTRING(REGEXP_REPLACE(a.BinaryVersion,'[A-Za-z]','','g'),0,POSITION('-' IN REGEXP_REPLACE(a.BinaryVersion,'[A-Za-z]','','g')))
+          WHEN a.BinaryVersion ~ '[A-Za-z]' AND a.BinaryVersion NOT LIKE '%-%' THEN SUBSTRING(REGEXP_REPLACE(a.BinaryVersion,'[A-Za-z]','','g'),0,POSITION('[A-Za-z]' IN REGEXP_REPLACE(a.BinaryVersion,'[A-Za-z]','','g')))
+          ELSE a.BinaryVersion
+        END AS Binary_Version
+      FROM PUBLIC.V_Fact_Sessions_ALL a
+      JOIN PUBLIC.AuthDB_IS_Users b ON a.GlobalUserId = b.GlobalUserId AND a.ApplicationId = b.ApplicationId
+      WHERE (a.BinaryVersion IS NULL OR UPPER(a.BinaryVersion) NOT LIKE '%FLOCK%') --Don't include any FLOCK/Test eapps
+      AND a.GlobalUserId IS NOT NULL
+      AND a.ApplicationId IN (SELECT ApplicationId FROM EventCube.BaseApps) --Base Apps we'll be cubing  
       ) app
 ;
 
