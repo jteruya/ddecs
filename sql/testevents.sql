@@ -34,7 +34,6 @@ FROM (SELECT
         SRC,
         ApplicationId,
         UserId,
-        GlobalUserId,
         DeviceId, 
         AppTypeId, 
         CASE WHEN MetricTypeId = 1 THEN StartDate WHEN MetricTypeId = 2 THEN EndDate ELSE EndDate END AS DT,
