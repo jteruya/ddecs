@@ -89,7 +89,7 @@ INSERT INTO EventCube.STG_DimUsers
 SELECT *
 FROM TempDimUsers_Agg
 WHERE GlobalUserId IS NOT NULL
-AND UserId NOT IN (SELECT UserId FROM TempDimUsers_Agg GROUP BY UserId HAVING COUNT(DISTINCT ApplicationId) > 1)
+AND UserId NOT IN (SELECT UserId FROM TempDimUsers_Agg WHERE UserID IS NOT NULL GROUP BY UserId HAVING COUNT(DISTINCT ApplicationId) > 1)
 AND UserId != 0;
 
 --======================================================================================================================================================--
