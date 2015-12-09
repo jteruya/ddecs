@@ -9,6 +9,7 @@ CREATE TABLE
         tinserted TIMESTAMP(6) WITHOUT TIME ZONE,
         applicationid CHARACTER VARYING(64),
         userid INTEGER,
+        globaluserid TEXT,
         deviceid TEXT,
         apptypeid INTEGER,
         binaryversion CHARACTER VARYING(32),
@@ -27,6 +28,7 @@ CREATE TABLE
         tinserted TIMESTAMP(6) WITHOUT TIME ZONE,
         applicationid CHARACTER VARYING(64),
         userid INTEGER,
+        globaluserid TEXT,
         deviceid TEXT,
         apptypeid INTEGER,
         binaryversion CHARACTER VARYING(32),
@@ -45,6 +47,7 @@ CREATE TABLE
         tinserted TIMESTAMP(6) WITHOUT TIME ZONE,
         applicationid CHARACTER VARYING(64),
         userid INTEGER,
+        globaluserid TEXT,
         deviceid TEXT,
         apptypeid INTEGER,
         binaryversion CHARACTER VARYING(32),
@@ -65,8 +68,7 @@ SELECT
     fact_sessions_old.tinserted,
     fact_sessions_old.application_id           AS applicationid,
     fact_sessions_old.user_id                  AS userid,
-    --NULL::text                                 AS globaluserid,
-    --NULL::INTEGER                              AS metrictypeid,
+    b.GlobalUserId                             AS GlobalUserId,
     UPPER((fact_sessions_old.device_id)::text) AS deviceid,
     fact_sessions_old.app_type_id              AS apptypeid,
     fact_sessions_old.binary_version           AS binaryversion,
@@ -74,6 +76,7 @@ SELECT
     fact_sessions_old.end_date                 AS enddate
 FROM
     fact_sessions_old
+LEFT JOIN AuthDB_IS_Users b ON fact_sessions_old.Application_Id = b.ApplicationId AND fact_sessions_old.User_id = b.UserId    
 WHERE
     (
         fact_sessions_old.end_date < '2015-04-24 00:00:00'::TIMESTAMP without TIME zone)
@@ -89,6 +92,7 @@ SELECT
   t.TInserted,
   t.ApplicationId, 
   t.UserId, 
+  t.GlobalUserId,
   t.DeviceId,
   t.AppTypeId,
   t.BinaryVersion,
@@ -103,6 +107,7 @@ FROM (
           TInserted,
           ApplicationId, 
           UserId, 
+          GlobalUserId,
           DT, 
           MetricTypeId,
           DeviceId,
@@ -113,19 +118,21 @@ FROM (
         FROM (
 
                 SELECT 
-                  Batch_Id, 
-                  Row_Id, 
-                  TInserted, 
-                  UPPER(Application_Id) AS ApplicationId, 
-                  User_Id AS UserId, 
-                  Metrics_Type_Id AS MetricTypeId, 
-                  UPPER(Device_Id) AS DeviceId, 
-                  App_Type_Id AS AppTypeId, 
-                  Binary_Version AS BinaryVersion, 
-                  CASE WHEN Metrics_Type_Id = 1 THEN Start_Date WHEN Metrics_Type_Id = 2 THEN End_Date END AS DT 
-                FROM Fact_Sessions 
-                WHERE Metrics_Type_Id IN (1,2) 
-                AND CASE WHEN Metrics_Type_Id = 1 THEN Start_Date WHEN Metrics_Type_Id = 2 THEN End_Date END >= '2015-04-24 00:00:00'
+                  a.Batch_Id, 
+                  a.Row_Id, 
+                  a.TInserted, 
+                  UPPER(a.Application_Id) AS ApplicationId, 
+                  a.User_Id AS UserId, 
+                  b.GlobalUserId,
+                  a.Metrics_Type_Id AS MetricTypeId, 
+                  UPPER(a.Device_Id) AS DeviceId, 
+                  a.App_Type_Id AS AppTypeId, 
+                  a.Binary_Version AS BinaryVersion, 
+                  CASE WHEN a.Metrics_Type_Id = 1 THEN Start_Date WHEN a.Metrics_Type_Id = 2 THEN End_Date END AS DT 
+                FROM Fact_Sessions a
+                LEFT JOIN AuthDB_IS_Users b ON UPPER(a.Application_Id) = b.ApplicationId AND a.User_Id = b.UserId    
+                WHERE a.Metrics_Type_Id IN (1,2) 
+                AND CASE WHEN a.Metrics_Type_Id = 1 THEN Start_Date WHEN a.Metrics_Type_Id = 2 THEN End_Date END >= '2015-04-24 00:00:00'
                 
         ) t
 ) t
