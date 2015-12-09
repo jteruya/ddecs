@@ -16,6 +16,7 @@ SELECT
   t.TInserted,
   t.ApplicationId, 
   t.UserId, 
+  t.GlobalUserId,
   t.DeviceId,
   t.AppTypeId,
   t.BinaryVersion,
@@ -30,6 +31,7 @@ FROM (
           TInserted,
           ApplicationId, 
           UserId, 
+          GlobalUserId,
           DT, 
           MetricTypeId,
           DeviceId,
@@ -40,20 +42,22 @@ FROM (
         FROM (
 
                 SELECT 
-                  Batch_Id, 
-                  Row_Id, 
-                  TInserted, 
-                  UPPER(Application_Id) AS ApplicationId, 
-                  User_Id AS UserId, 
-                  Metrics_Type_Id AS MetricTypeId, 
-                  UPPER(Device_Id) AS DeviceId, 
-                  App_Type_Id AS AppTypeId, 
-                  Binary_Version AS BinaryVersion, 
-                  CASE WHEN Metrics_Type_Id = 1 THEN Start_Date WHEN Metrics_Type_Id = 2 THEN End_Date END AS DT 
-                FROM PUBLIC.Fact_Sessions_New
-                WHERE Metrics_Type_Id IN (1,2) 
+                  a.Batch_Id, 
+                  a.Row_Id, 
+                  a.TInserted, 
+                  UPPER(a.Application_Id) AS ApplicationId, 
+                  a.User_Id AS UserId, 
+                  b.GlobalUserId,
+                  a.Metrics_Type_Id AS MetricTypeId, 
+                  UPPER(a.Device_Id) AS DeviceId, 
+                  a.App_Type_Id AS AppTypeId, 
+                  a.Binary_Version AS BinaryVersion, 
+                  CASE WHEN a.Metrics_Type_Id = 1 THEN Start_Date WHEN a.Metrics_Type_Id = 2 THEN End_Date END AS DT 
+                FROM PUBLIC.Fact_Sessions_New a
+                LEFT JOIN AuthDB_IS_Users b ON UPPER(a.Application_Id) = b.ApplicationId AND a.User_Id = b.UserId    
+                WHERE a.Metrics_Type_Id IN (1,2) 
                 --Incremental Logic
-                AND Batch_Id >= (SELECT COALESCE(MAX(Batch_Id),0) FROM EventCube.Sessions WHERE Src = 'oldMetrics_Live') --Identify the last batch that was loaded
+                AND a.Batch_Id >= (SELECT COALESCE(MAX(Batch_Id),0) FROM EventCube.Sessions WHERE Src = 'oldMetrics_Live') --Identify the last batch that was loaded
                 
         ) t
 ) t
