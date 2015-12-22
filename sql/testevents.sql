@@ -35,6 +35,7 @@ FROM EventCube.Sessions a
 WHERE (a.BinaryVersion IS NULL OR UPPER(a.BinaryVersion) NOT LIKE '%FLOCK%') --Don't include any FLOCK/Test eapps
 AND a.GlobalUserId IS NOT NULL
 AND a.ApplicationId IN (SELECT ApplicationId FROM EventCube.BaseApps) --Base Apps we'll be cubing  
+AND a.StartDate <= CURRENT_DATE
 ;
 --======================================================================================================================================================--
 
