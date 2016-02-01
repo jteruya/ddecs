@@ -62,7 +62,8 @@ FROM (
         ) t
 ) t
 WHERE t.MetricTypeId = 1 
-AND CASE WHEN t.MetricTypeId = 1 AND t.NEXT_MetricTypeId = 2 THEN t.NEXT_DT END IS NOT NULL;
+--If HTML5, then let it pass automatically
+AND CASE WHEN t.AppTypeId = 4 THEN CAST('1970-01-01 00:00:00' AS TIMESTAMP) WHEN t.MetricTypeId = 1 AND t.NEXT_MetricTypeId = 2 THEN t.NEXT_DT END IS NOT NULL;
 
 --================================================================================================================================================================
 --2. Delete records tied to the latest Batch
