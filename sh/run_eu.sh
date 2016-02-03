@@ -11,7 +11,7 @@ run_sql="psql -h 10.182.7.70 -p 5432 etl etl -f "
 # ------------------------------------------------------------------------
 # Perform the Incremental Logic of Identified Sessions
 echo `date` running sessions_incremental_newMetrics.sql; $run_sql $wd"/../sql/sessions_incremental_newMetrics.sql"
-# echo `date` running sessions_incremental_oldMetrics.sql; $run_sql $wd"/../sql/sessions_incremental_oldMetrics.sql"
+echo `date` running sessions_incremental_oldMetrics_eu.sql; $run_sql $wd"/../sql/sessions_incremental_oldMetrics_eu.sql"
 
 # ------------------------------------------------------------------------
 # Know which events and users to include
