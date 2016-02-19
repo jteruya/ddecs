@@ -3,9 +3,35 @@
 -- Creates an aggregate at the User level with Application-level fields for slicing.
 --===================================================================================================
 
-TRUNCATE TABLE EventCube.STG_UserCubeSummary;
-VACUUM EventCube.STG_UserCubeSummary;
-INSERT INTO EventCube.STG_UserCubeSummary
+-- Perform aggregates in memory before join
+CREATE TEMPORARY TABLE UserCubeSummary_Posts TABLESPACE FastStorage AS
+SELECT F.UserId, COUNT(*) AS Posts, SUM(HasImage) PostsImage, SUM(CASE WHEN ListType != 'Regular' THEN 1 ELSE 0 END) AS PostsItem FROM EventCube.V_FactPosts F JOIN EventCube.DimUsers du ON F.UserId = du.UserId GROUP BY F.UserId;
+
+CREATE TEMPORARY TABLE UserCubeSummary_Likes TABLESPACE FastStorage AS
+SELECT F.UserId, COUNT(*) AS Likes FROM EventCube.V_FactLikes F JOIN EventCube.DimUsers du ON F.UserId = du.UserId GROUP BY F.UserId;
+
+CREATE TEMPORARY TABLE UserCubeSummary_Comments TABLESPACE FastStorage AS
+SELECT F.UserId, COUNT(*) AS Comments FROM EventCube.V_FactComments F JOIN EventCube.DimUsers du ON F.UserId = du.UserId GROUP BY F.UserId;
+
+CREATE TEMPORARY TABLE UserCubeSummary_TotalBookmarks TABLESPACE FastStorage AS
+SELECT F.UserId, COUNT(*) AS TotalBookmarks, SUM(CASE WHEN IsImported IS NULL THEN 0 WHEN IsImported IS false THEN 0 ELSE 1 END) AS ImportedBookmarks FROM EventCube.V_FactBookmarks F JOIN EventCube.DimUsers du ON F.UserId = du.UserId GROUP BY F.UserId;
+
+CREATE TEMPORARY TABLE UserCubeSummary_Follows TABLESPACE FastStorage AS
+SELECT F.UserId, COUNT(*) AS Follows FROM EventCube.V_FactFollows F JOIN EventCube.DimUsers du ON F.UserId = du.UserId GROUP BY F.UserId;
+
+CREATE TEMPORARY TABLE UserCubeSummary_CheckIns TABLESPACE FastStorage AS
+SELECT F.UserId, COUNT(*) AS CheckIns, SUM(IsHeadcount) AS CheckInsHeadcount FROM EventCube.V_FactCheckIns F JOIN EventCube.DimUsers du ON F.UserId = du.UserId GROUP BY F.UserId;
+
+CREATE TEMPORARY TABLE UserCubeSummary_Ratings TABLESPACE FastStorage AS
+SELECT F.UserId, COUNT(*) AS Ratings, SUM(HasReview) AS Reviews FROM EventCube.V_FactRatings F JOIN EventCube.DimUsers du ON F.UserId = du.UserId GROUP BY F.UserId;
+
+CREATE TEMPORARY TABLE UserCubeSummary_Surveys TABLESPACE FastStorage AS
+SELECT F.UserId, COUNT(*) AS Surveys FROM EventCube.V_FactSurveys F JOIN EventCube.DimUsers du ON F.UserId = du.UserId GROUP BY F.UserId;
+
+--===================================================================================================
+--== Set the Base for the UserCubeSummary
+
+CREATE TEMPORARY TABLE STG_UserCubeSummary_Base TABLESPACE FastStorage AS 
 SELECT 
   --== Application Metadata
   u.ApplicationId, 
@@ -29,22 +55,9 @@ SELECT
   COALESCE(binaryversion.BinaryVersion,'v???') AS BinaryVersion, 
   CASE WHEN sessions.Sessions >= 1 THEN 1 ELSE 0 END AS Active, 
   CASE WHEN sessions.Sessions >= 10 THEN 1 ELSE 0 END AS Engaged,
-
-  --== Fact Data
-  COALESCE(Sessions,0) AS Sessions, 
-  COALESCE(Posts,0) AS Posts, 
-  COALESCE(PostsImage,0) AS PostsImage, 
-  COALESCE(PostsItem,0) AS PostsItem, 
-  COALESCE(Likes,0) AS Likes, 
-  COALESCE(Comments,0) AS Comments, 
-  COALESCE(TotalBookmarks,0) AS TotalBookmarks, 
-  COALESCE(ImportedBookmarks,0) AS ImportedBookmarks, 
-  COALESCE(Follows,0) AS Follows, 
-  COALESCE(CheckIns,0) AS CheckIns, 
-  COALESCE(CheckInsHeadcount,0) AS CheckInsHeadcount, 
-  COALESCE(Ratings,0) AS Ratings, 
-  COALESCE(Reviews,0) AS Reviews, 
-  COALESCE(Surveys,0) AS Surveys,
+  
+  --== Session Facts
+  COALESCE(sessions.Sessions,0) AS Sessions, 
 
   --== Feature Indicators
   COALESCE(e.OpenEvent,-1) AS OpenEvent, 
@@ -82,16 +95,82 @@ LEFT OUTER JOIN EventCube.V_DimUserDeviceType device ON u.UserId = device.UserId
 LEFT OUTER JOIN EventCube.V_DimUserSocialNetworks social ON u.UserId = social.UserId
 LEFT OUTER JOIN EventCube.V_DimUserBinaryVersion binaryversion ON u.UserId = binaryversion.UserId
 
+--== Session Facts
+LEFT OUTER JOIN EventCube.Agg_Session_per_AppUser sessions ON u.UserId = sessions.UserId
+;
+
+--===================================================================================================
+--== Load the Base + Aggregate Counts
+TRUNCATE TABLE EventCube.STG_UserCubeSummary;
+VACUUM EventCube.STG_UserCubeSummary;
+INSERT INTO EventCube.STG_UserCubeSummary
+SELECT 
+  base.ApplicationId, 
+  base.Name, 
+  base.StartDate, 
+  base.EndDate,
+  base.GlobalUserId, 
+  base.UserId,
+  base.FirstTimestamp,
+  base.LastTimestamp,
+  base.Facebook, 
+  base.Twitter, 
+  base.LinkedIn, 
+  base.Device, 
+  base.DeviceType,   
+  base.BinaryVersion, 
+  base.Active, 
+  base.Engaged,
+  base.Sessions, 
+
+  --== Fact Data
+  COALESCE(Posts,0) AS Posts, 
+  COALESCE(PostsImage,0) AS PostsImage, 
+  COALESCE(PostsItem,0) AS PostsItem, 
+  COALESCE(Likes,0) AS Likes, 
+  COALESCE(Comments,0) AS Comments, 
+  COALESCE(TotalBookmarks,0) AS TotalBookmarks, 
+  COALESCE(ImportedBookmarks,0) AS ImportedBookmarks, 
+  COALESCE(Follows,0) AS Follows, 
+  COALESCE(CheckIns,0) AS CheckIns, 
+  COALESCE(CheckInsHeadcount,0) AS CheckInsHeadcount, 
+  COALESCE(Ratings,0) AS Ratings, 
+  COALESCE(Reviews,0) AS Reviews, 
+  COALESCE(Surveys,0) AS Surveys,
+
+  base.OpenEvent, 
+  base.LeadScanning, 
+  base.SurveysOn, 
+  base.InteractiveMap, 
+  base.Leaderboard, 
+  base.Bookmarking, 
+  base.Photofeed, 
+  base.AttendeesList, 
+  base.QRCode, 
+  base.ExhibitorReqInfo, 
+  base.ExhibitorMsg, 
+  base.PrivateMsging, 
+  base.PeopleMatching, 
+  base.SocialNetworks, 
+  base.RatingsOn,
+  base.EventType, 
+  base.EventSize, 
+  base.AccountCustomerDomain, 
+  base.ServiceTierName, 
+  base.App365Indicator, 
+  base.OwnerName
+
+FROM STG_UserCubeSummary_Base base
+
 --== User Facts
-LEFT OUTER JOIN (SELECT UserId, Sessions FROM EventCube.Agg_Session_per_AppUser) sessions ON u.UserId = sessions.UserId
-LEFT OUTER JOIN (SELECT UserId, COUNT(*) AS Posts, SUM(HasImage) PostsImage, SUM(CASE WHEN ListType != 'Regular' THEN 1 ELSE 0 END) PostsItem FROM EventCube.V_FactPosts GROUP BY UserId) P ON U.UserId = P.UserId
-LEFT OUTER JOIN (SELECT UserId, COUNT(*) AS Likes FROM EventCube.V_FactLikes GROUP BY UserId) L ON U.UserId = L.UserId
-LEFT OUTER JOIN (SELECT UserId, COUNT(*) AS Comments FROM EventCube.V_FactComments GROUP BY UserId) C ON U.UserId = C.UserId
-LEFT OUTER JOIN (SELECT UserId, COUNT(*) AS TotalBookmarks, SUM(CASE WHEN IsImported IS NULL THEN 0 WHEN IsImported IS false THEN 0 ELSE 1 END) AS ImportedBookmarks FROM EventCube.V_FactBookmarks GROUP BY UserId) B ON U.UserId = B.UserId
-LEFT OUTER JOIN (SELECT UserId, COUNT(*) AS Follows FROM EventCube.V_FactFollows GROUP BY UserId) F ON U.UserId = F.UserId
-LEFT OUTER JOIN (SELECT UserId, COUNT(*) AS CheckIns, SUM(IsHeadcount) CheckInsHeadcount FROM EventCube.V_FactCheckIns GROUP BY UserId) K ON U.UserId = K.UserId
-LEFT OUTER JOIN (SELECT UserId, COUNT(*) AS Ratings, SUM(HasReview) Reviews FROM EventCube.V_FactRatings GROUP BY UserId) R ON U.UserId = R.UserId
-LEFT OUTER JOIN (SELECT UserId, COUNT(*) AS Surveys FROM EventCube.V_FactSurveys GROUP BY UserId) V ON U.UserId = V.UserId
+LEFT OUTER JOIN UserCubeSummary_Posts P ON base.UserId = P.UserId
+LEFT OUTER JOIN UserCubeSummary_Likes L ON base.UserId = L.UserId
+LEFT OUTER JOIN UserCubeSummary_Comments C ON base.UserId = C.UserId
+LEFT OUTER JOIN UserCubeSummary_TotalBookmarks B ON base.UserId = B.UserId
+LEFT OUTER JOIN UserCubeSummary_Follows F ON base.UserId = F.UserId
+LEFT OUTER JOIN UserCubeSummary_CheckIns K ON base.UserId = K.UserId
+LEFT OUTER JOIN UserCubeSummary_Ratings R ON base.UserId = R.UserId
+LEFT OUTER JOIN UserCubeSummary_Surveys V ON base.UserId = V.UserId
 ;
 
 --======================================================================================================================================================--
