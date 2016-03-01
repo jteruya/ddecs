@@ -6,7 +6,7 @@
 echo `date` starting script...
 
 wd=$HOME'/eventcube/sh'
-run_sql="psql -h 10.182.7.70 -p 5432 etl etl -f "
+run_sql="psql -h 10.183.144.118 -p 5432 etl etl -f "
 
 # ------------------------------------------------------------------------
 # Perform the Incremental Logic of Identified Sessions
