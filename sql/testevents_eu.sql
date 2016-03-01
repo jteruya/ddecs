@@ -99,8 +99,8 @@ DROP TABLE IF EXISTS EventCube.Agg_Session_perUser_perMonth CASCADE;
 CREATE TABLE EventCube.Agg_Session_perUser_perMonth AS 
 SELECT CAST(EXTRACT(Year FROM CAST(StartDate AS Date)) AS TEXT)||'-'||CASE WHEN CAST(EXTRACT(Month FROM CAST(StartDate AS Date)) AS INT) < 10 THEN '0' ELSE '' END||CAST(EXTRACT(Month FROM CAST(StartDate AS Date)) AS TEXT) AS YYYY_MM, UserId, COUNT(*) AS Sessions
 FROM BaseSessions
-WHERE ApplicationId NOT IN (SELECT ApplicationId FROM EventCube.TestEvents) 
-AND StartDate >= CAST(CAST(EXTRACT(YEAR FROM CAST(CURRENT_DATE AS TIMESTAMP) - INTERVAL'6 months') AS TEXT) || '-' || CASE WHEN EXTRACT(MONTH FROM CAST(CURRENT_DATE AS TIMESTAMP) - INTERVAL'6 months') < 10 THEN '0' ELSE '' END || CAST(EXTRACT(MONTH FROM CAST(CURRENT_DATE AS TIMESTAMP) - INTERVAL'6 months') AS TEXT) || '-01 00:00:00' AS TIMESTAMP)
+WHERE /*ApplicationId NOT IN (SELECT ApplicationId FROM EventCube.TestEvents) 
+AND*/ StartDate >= CAST(CAST(EXTRACT(YEAR FROM CAST(CURRENT_DATE AS TIMESTAMP) - INTERVAL'6 months') AS TEXT) || '-' || CASE WHEN EXTRACT(MONTH FROM CAST(CURRENT_DATE AS TIMESTAMP) - INTERVAL'6 months') < 10 THEN '0' ELSE '' END || CAST(EXTRACT(MONTH FROM CAST(CURRENT_DATE AS TIMESTAMP) - INTERVAL'6 months') AS TEXT) || '-01 00:00:00' AS TIMESTAMP)
 GROUP BY 1,2;
 
 --======================================================================================================================================================--
