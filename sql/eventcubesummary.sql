@@ -76,10 +76,10 @@ SELECT
         ADOPTION_FOOL.Adoption,
 
         --== Test Event Flag
-        CASE
+        /*CASE
            WHEN TE.ApplicationId IS NOT NULL THEN 1
            ELSE 0
-        END AS TestEvent
+        END AS TestEvent*/
 FROM
 --== Basic Aggregate from UserCubeSummary
 (       
@@ -224,11 +224,11 @@ LEFT OUTER JOIN
         GROUP BY s.ApplicationId
 ) PR ON PR.ApplicationId = S.ApplicationId
 --== Test Event Flag
-LEFT OUTER JOIN
+/*LEFT OUTER JOIN
 (
         SELECT ApplicationId
         FROM EventCube.TestEvents
-) TE ON S.ApplicationId = TE.ApplicationID
+) TE ON S.ApplicationId = TE.ApplicationID*/
 ;
 
 -- Create the View for Reporter user 
