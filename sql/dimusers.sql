@@ -18,7 +18,7 @@
 --
 -- This temporary dataset is then transformed in the following ways to create the User Dimension data:
 -- A. Identify the Global User ID via IS_USER
--- B. Filter out the Test Event users
+-- B. Filter out the Test Event users (Deprecitated 2/26/2016 - PA-481)
 -- C. Filter the fact data that is older than May 16, 2013. 
 -- D. Filter out any records without a Global User ID
 -- E. Filter out any User IDs where the User ID is tied to more than one Application ID. 
@@ -32,41 +32,41 @@ CREATE TEMPORARY TABLE TempDimUsers TABLESPACE FastStorage AS
         FROM EventCube.Agg_Session_per_AppUser base
         LEFT JOIN EventCube.DimUsers du ON base.ApplicationId = du.ApplicationId AND base.UserId = du.UserId
         LEFT OUTER JOIN PUBLIC.AuthDB_IS_Users U ON base.ApplicationId = U.ApplicationId AND base.UserId = U.UserId
-        WHERE base.ApplicationId NOT IN (SELECT ApplicationId FROM EventCube.TestEvents)
-        AND (base.FirstTimestamp < du.FirstTimestamp OR base.FirstTimestamp > du.LastTimestamp OR du.UserId IS NULL)
+        WHERE /*base.ApplicationId NOT IN (SELECT ApplicationId FROM EventCube.TestEvents)
+        AND*/ (base.FirstTimestamp < du.FirstTimestamp OR base.FirstTimestamp > du.LastTimestamp OR du.UserId IS NULL)
         UNION ALL
         SELECT base.ApplicationId, base.UserId, base.LastTimestamp AS TS, U.GlobalUserId
         FROM EventCube.Agg_Session_per_AppUser base
         LEFT JOIN EventCube.DimUsers du ON base.ApplicationId = du.ApplicationId AND base.UserId = du.UserId
         LEFT OUTER JOIN PUBLIC.AuthDB_IS_Users U ON base.ApplicationId = U.ApplicationId AND base.UserId = U.UserId
-        WHERE base.ApplicationId NOT IN (SELECT ApplicationId FROM EventCube.TestEvents)
-        AND (base.LastTimestamp < du.FirstTimestamp OR base.LastTimestamp > du.LastTimestamp OR du.UserId IS NULL)
+        WHERE /*base.ApplicationId NOT IN (SELECT ApplicationId FROM EventCube.TestEvents)
+        AND*/ (base.LastTimestamp < du.FirstTimestamp OR base.LastTimestamp > du.LastTimestamp OR du.UserId IS NULL)
         UNION ALL
         SELECT base.ApplicationId, base.UserId, base.Created AS TS, U.GlobalUserId
         FROM PUBLIC.Ratings_UserCheckins base
         LEFT JOIN EventCube.DimUsers du ON base.ApplicationId = du.ApplicationId AND base.UserId = du.UserId
-        JOIN (SELECT ApplicationId FROM EventCube.BaseApps WHERE ApplicationId NOT IN (SELECT ApplicationId FROM EventCube.TestEvents)) app ON base.ApplicationId = app.ApplicationId
+        JOIN (SELECT ApplicationId FROM EventCube.BaseApps /*WHERE ApplicationId NOT IN (SELECT ApplicationId FROM EventCube.TestEvents)*/) app ON base.ApplicationId = app.ApplicationId
         LEFT OUTER JOIN PUBLIC.AuthDB_IS_Users U ON base.ApplicationId = U.ApplicationId AND base.UserId = U.UserId
         WHERE (base.Created < du.FirstTimestamp OR base.Created > du.LastTimestamp OR du.UserId IS NULL)
         UNION ALL
         SELECT L.ApplicationId, L.UserId, L.Created AS TS, U.GlobalUserId
         FROM PUBLIC.Ratings_UserCheckInLikes L
         LEFT JOIN EventCube.DimUsers du ON L.ApplicationId = du.ApplicationId AND L.UserId = du.UserId
-        JOIN (SELECT ApplicationId FROM EventCube.BaseApps WHERE ApplicationId NOT IN (SELECT ApplicationId FROM EventCube.TestEvents)) app ON L.ApplicationId = app.ApplicationId
+        JOIN (SELECT ApplicationId FROM EventCube.BaseApps /*WHERE ApplicationId NOT IN (SELECT ApplicationId FROM EventCube.TestEvents)*/) app ON L.ApplicationId = app.ApplicationId
         LEFT OUTER JOIN PUBLIC.AuthDB_IS_Users U ON L.ApplicationId = U.ApplicationId AND L.UserId = U.UserId
         WHERE (L.Created < du.FirstTimestamp OR L.Created > du.LastTimestamp OR du.UserId IS NULL)
         UNION ALL
         SELECT C.ApplicationId, C.UserId, C.Created AS TS, U.GlobalUserId
         FROM PUBLIC.Ratings_UserCheckInComments C
         LEFT JOIN EventCube.DimUsers du ON C.ApplicationId = du.ApplicationId AND C.UserId = du.UserId
-        JOIN (SELECT ApplicationId FROM EventCube.BaseApps WHERE ApplicationId NOT IN (SELECT ApplicationId FROM EventCube.TestEvents)) app ON C.ApplicationId = app.ApplicationId
+        JOIN (SELECT ApplicationId FROM EventCube.BaseApps /*WHERE ApplicationId NOT IN (SELECT ApplicationId FROM EventCube.TestEvents)*/) app ON C.ApplicationId = app.ApplicationId
         LEFT OUTER JOIN PUBLIC.AuthDB_IS_Users U ON C.ApplicationId = U.ApplicationId AND C.UserId = U.UserId
         WHERE (C.Created < du.FirstTimestamp OR C.Created > du.LastTimestamp OR du.UserId IS NULL)
         UNION ALL
         SELECT F.ApplicationId, F.UserId, F.Created AS TS, U.GlobalUserId
         FROM PUBLIC.Ratings_UserFavorites F
         LEFT JOIN EventCube.DimUsers du ON F.ApplicationId = du.ApplicationId AND F.UserId = du.UserId
-        JOIN (SELECT ApplicationId FROM EventCube.BaseApps WHERE ApplicationId NOT IN (SELECT ApplicationId FROM EventCube.TestEvents)) app ON F.ApplicationId = app.ApplicationId
+        JOIN (SELECT ApplicationId FROM EventCube.BaseApps /*WHERE ApplicationId NOT IN (SELECT ApplicationId FROM EventCube.TestEvents)*/) app ON F.ApplicationId = app.ApplicationId
         LEFT OUTER JOIN PUBLIC.AuthDB_IS_Users U ON F.ApplicationId = U.ApplicationId AND F.UserId = U.UserId
         WHERE (F.Created < du.FirstTimestamp OR F.Created > du.LastTimestamp OR du.UserId IS NULL)
         UNION ALL
@@ -74,13 +74,13 @@ CREATE TEMPORARY TABLE TempDimUsers TABLESPACE FastStorage AS
         FROM (SELECT F.UserId, F.Created AS TS FROM PUBLIC.Ratings_UserTrust F) F
         JOIN PUBLIC.AuthDB_IS_Users U ON F.UserId = U.UserId
         LEFT JOIN EventCube.DimUsers du ON U.ApplicationId = du.ApplicationId AND F.UserId = du.UserId
-        JOIN (SELECT ApplicationId FROM EventCube.BaseApps WHERE ApplicationId NOT IN (SELECT ApplicationId FROM EventCube.TestEvents)) app ON U.ApplicationId = app.ApplicationId
+        JOIN (SELECT ApplicationId FROM EventCube.BaseApps /*WHERE ApplicationId NOT IN (SELECT ApplicationId FROM EventCube.TestEvents)*/) app ON U.ApplicationId = app.ApplicationId
         WHERE (F.TS < du.FirstTimestamp OR F.TS > du.LastTimestamp OR du.UserId IS NULL)
         UNION ALL
         SELECT SU.ApplicationId, SU.UserId, SU.Created AS TS, U.GlobalUserId
         FROM PUBLIC.Ratings_ShowUps SU
         LEFT JOIN EventCube.DimUsers du ON SU.ApplicationId = du.ApplicationId AND SU.UserId = du.UserId
-        JOIN (SELECT ApplicationId FROM EventCube.BaseApps WHERE ApplicationId NOT IN (SELECT ApplicationId FROM EventCube.TestEvents)) app ON SU.ApplicationId = app.ApplicationId
+        JOIN (SELECT ApplicationId FROM EventCube.BaseApps /*WHERE ApplicationId NOT IN (SELECT ApplicationId FROM EventCube.TestEvents)*/) app ON SU.ApplicationId = app.ApplicationId
         LEFT OUTER JOIN PUBLIC.AuthDB_IS_Users U ON SU.ApplicationId = U.ApplicationId AND SU.UserId = U.UserId
         WHERE (SU.Created < du.FirstTimestamp OR SU.Created > du.LastTimestamp OR du.UserId IS NULL)
         UNION ALL
@@ -89,7 +89,7 @@ CREATE TEMPORARY TABLE TempDimUsers TABLESPACE FastStorage AS
         JOIN PUBLIC.Ratings_SurveyQuestions Q ON R.SurveyQuestionId = Q.SurveyQuestionId
         JOIN PUBLIC.Ratings_Surveys S ON Q.SurveyId = S.SurveyId
         LEFT JOIN EventCube.DimUsers du ON S.ApplicationId = du.ApplicationId AND R.UserId = du.UserId
-        JOIN (SELECT ApplicationId FROM EventCube.BaseApps WHERE ApplicationId NOT IN (SELECT ApplicationId FROM EventCube.TestEvents)) app ON S.ApplicationId = app.ApplicationId
+        JOIN (SELECT ApplicationId FROM EventCube.BaseApps /*WHERE ApplicationId NOT IN (SELECT ApplicationId FROM EventCube.TestEvents)*/) app ON S.ApplicationId = app.ApplicationId
         LEFT OUTER JOIN PUBLIC.AuthDB_IS_Users U ON S.ApplicationId = U.ApplicationId AND R.UserId = U.UserId
         WHERE (R.Created < du.FirstTimestamp OR R.Created > du.LastTimestamp OR du.UserId IS NULL)
 ;

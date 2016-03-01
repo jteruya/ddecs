@@ -73,7 +73,13 @@ SELECT
         COALESCE(PR.PollResponses,0) AS PollResponses,
         
         --== Calculated Rates
-        ADOPTION_FOOL.Adoption
+        ADOPTION_FOOL.Adoption/*,
+
+        --== Test Event Flag
+        CASE
+           WHEN TE.ApplicationId IS NOT NULL THEN 1
+           ELSE 0
+        END AS TestEvent*/
 FROM
 --== Basic Aggregate from UserCubeSummary
 (       
@@ -217,6 +223,12 @@ LEFT OUTER JOIN
         WHERE s.IsPoll = 'true'
         GROUP BY s.ApplicationId
 ) PR ON PR.ApplicationId = S.ApplicationId
+--== Test Event Flag
+/*LEFT OUTER JOIN
+(
+        SELECT ApplicationId
+        FROM EventCube.TestEvents
+) TE ON S.ApplicationId = TE.ApplicationID*/
 ;
 
 -- Create the View for Reporter user 
