@@ -73,10 +73,10 @@ SELECT
         COALESCE(PR.PollResponses,0) AS PollResponses,
         
         --== Calculated Rates
-        ADOPTION_FOOL.Adoption,
+        ADOPTION_FOOL.Adoption/*,
 
         --== Test Event Flag
-        /*CASE
+        CASE
            WHEN TE.ApplicationId IS NOT NULL THEN 1
            ELSE 0
         END AS TestEvent*/
