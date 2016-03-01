@@ -16,7 +16,7 @@ echo `date` running sessions_incremental_oldMetrics_eu.sql; $run_sql $wd"/../sql
 # ------------------------------------------------------------------------
 # Know which events and users to include
 echo `date` running testevents_eu.sql; $run_sql $wd"/../sql/testevents_eu.sql"
-echo `date` running dimusers.sql; $run_sql $wd"/../sql/dimusers.sql"
+echo `date` running dimusers.sql; $run_sql $wd"/../sql/dimusers_eu.sql"
 
 # ------------------------------------------------------------------------
 # Views necessary
