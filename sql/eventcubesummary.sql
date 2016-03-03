@@ -109,27 +109,32 @@ FROM
                 ServiceTierName, 
                 App365Indicator, 
                 OwnerName,
-                COUNT(*) AS Users, 
-                SUM(Active) AS UsersActive, 
-                SUM(Engaged) UsersEngaged,
-                SUM(Facebook) AS UsersFacebook, 
-                SUM(Twitter) AS UsersTwitter, 
-                SUM(LinkedIn) AS UsersLinkedIn,
-                SUM(Sessions) AS Sessions, 
-                SUM(Posts) AS Posts, 
-                SUM(PostsImage) AS PostsImage, 
-                SUM(PostsItem) AS PostsItem, 
-                SUM(Likes) AS Likes, 
-                SUM(Comments) AS Comments, 
-                SUM(TotalBookmarks) AS TotalBookmarks, 
-                SUM(ImportedBookmarks) AS ImportedBookmarks, 
-                SUM(Follows) AS Follows, 
-                SUM(CheckIns) AS CheckIns, 
-                SUM(CheckInsHeadcount) AS CheckInsHeadcount, 
-                SUM(Ratings) AS Ratings, 
-                SUM(Reviews) AS Reviews, 
-                SUM(Surveys) AS Surveys
+                COUNT(CASE WHEN ISU.UserId IS NOT NULL THEN 1 ELSE NULL END) AS Users, 
+                SUM(CASE WHEN ISU.UserId IS NOT NULL THEN Active ELSE 0 END) AS UsersActive, 
+                SUM(CASE WHEN ISU.UserId IS NOT NULL THEN Engaged ELSE 0 END) UsersEngaged,
+                SUM(CASE WHEN ISU.UserId IS NOT NULL THEN Facebook ELSE 0 END) AS UsersFacebook, 
+                SUM(CASE WHEN ISU.UserId IS NOT NULL THEN Twitter ELSE 0 END) AS UsersTwitter, 
+                SUM(CASE WHEN ISU.UserId IS NOT NULL THEN LinkedIn ELSE 0 END) AS UsersLinkedIn,
+                SUM(CASE WHEN ISU.UserId IS NOT NULL THEN Sessions ELSE 0 END) AS Sessions, 
+                SUM(CASE WHEN ISU.UserId IS NOT NULL THEN Posts ELSE 0 END) AS Posts, 
+                SUM(CASE WHEN ISU.UserId IS NOT NULL THEN PostsImage ELSE 0 END) AS PostsImage, 
+                SUM(CASE WHEN ISU.UserId IS NOT NULL THEN PostsItem ELSE 0 END) AS PostsItem, 
+                SUM(CASE WHEN ISU.UserId IS NOT NULL THEN Likes ELSE 0 END) AS Likes, 
+                SUM(CASE WHEN ISU.UserId IS NOT NULL THEN Comments ELSE 0 END) AS Comments, 
+                SUM(CASE WHEN ISU.UserId IS NOT NULL THEN TotalBookmarks ELSE 0 END) AS TotalBookmarks, 
+                SUM(CASE WHEN ISU.UserId IS NOT NULL THEN ImportedBookmarks ELSE 0 END) AS ImportedBookmarks, 
+                SUM(CASE WHEN ISU.UserId IS NOT NULL THEN Follows ELSE 0 END) AS Follows, 
+                SUM(CASE WHEN ISU.UserId IS NOT NULL THEN CheckIns ELSE 0 END) AS CheckIns, 
+                SUM(CASE WHEN ISU.UserId IS NOT NULL THEN CheckInsHeadcount ELSE 0 END) AS CheckInsHeadcount, 
+                SUM(CASE WHEN ISU.UserId IS NOT NULL THEN Ratings ELSE 0 END) AS Ratings, 
+                SUM(CASE WHEN ISU.UserId IS NOT NULL THEN Reviews ELSE 0 END) AS Reviews, 
+                SUM(CASE WHEN ISU.UserId IS NOT NULL THEN Surveys ELSE 0 END) AS Surveys
         FROM EventCube.UserCubeSummary S
+        LEFT JOIN (SELECT DISTINCT ApplicationId,
+                              UserId
+              FROM Public.AuthDB_IS_Users
+              WHERE IsDisabled = 0) ISU
+        ON S.ApplicationId = ISU.ApplicationID AND S.UserId = ISU.UserId
         GROUP BY S.ApplicationId, Name, StartDate, EndDate, OpenEvent, LeadScanning, SurveysOn, InteractiveMap, Leaderboard, Bookmarking, Photofeed, AttendeesList, QRCode, ExhibitorReqInfo, ExhibitorMsg, PrivateMsging, PeopleMatching, SocialNetworks, RatingsOn, EventType, EventSize, AccountCustomerDomain, ServiceTierName, App365Indicator, OwnerName
         
 ) S
