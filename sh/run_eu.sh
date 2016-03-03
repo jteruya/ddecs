@@ -6,7 +6,7 @@
 echo `date` starting script...
 
 wd=$HOME'/eventcube/sh'
-run_sql="psql -h 10.182.7.70 -p 5432 etl etl -f "
+run_sql="psql -h 10.183.144.118 -p 5432 etl etl -f "
 
 # ------------------------------------------------------------------------
 # Perform the Incremental Logic of Identified Sessions
@@ -16,7 +16,7 @@ echo `date` running sessions_incremental_oldMetrics_eu.sql; $run_sql $wd"/../sql
 # ------------------------------------------------------------------------
 # Know which events and users to include
 echo `date` running testevents_eu.sql; $run_sql $wd"/../sql/testevents_eu.sql"
-echo `date` running dimusers.sql; $run_sql $wd"/../sql/dimusers.sql"
+echo `date` running dimusers.sql; $run_sql $wd"/../sql/dimusers_eu.sql"
 
 # ------------------------------------------------------------------------
 # Views necessary
