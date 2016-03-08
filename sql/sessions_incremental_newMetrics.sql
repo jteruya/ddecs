@@ -30,7 +30,7 @@ LEFT JOIN (
           FROM AuthDB_IS_Users 
         ) t WHERE t.RNK = 1
 ) iu ON UPPER(base.Application_Id) = iu.ApplicationId AND UPPER(base.Global_User_Id) = iu.GlobalUserId
-WHERE base.Identifier = 'end'
+WHERE base.Identifier = 'start'
 --Incremental Logic
 AND base.Batch_Id >= (SELECT COALESCE(MAX(Batch_Id),0) FROM EventCube.Sessions WHERE Src = 'newMetrics_Live') --Identify the last batch that was loaded)
 ;
