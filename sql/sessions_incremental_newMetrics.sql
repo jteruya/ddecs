@@ -20,8 +20,10 @@ SELECT
   UPPER(base.Device_Id) AS DeviceId, 
   CASE WHEN base.Device_Type = 'ios' THEN 1 WHEN base.Device_Type = 'android' THEN 3 END AS AppTypeId, 
   base.Binary_Version AS BinaryVersion, 
-  ('1970-01-01 00:00:00'::TIMESTAMP without TIME zone + (((((base.Metadata ->> 'Start'::text))::NUMERIC / (1000)::NUMERIC))::DOUBLE PRECISION * '00:00:01'::interval)) AS StartDate,
-  base.Created AS EndDate
+  --('1970-01-01 00:00:00'::TIMESTAMP without TIME zone + (((((base.Metadata ->> 'Start'::text))::NUMERIC / (1000)::NUMERIC))::DOUBLE PRECISION * '00:00:01'::interval)) AS StartDate,
+  --base.Created AS EndDate
+  base.Created AS StartDate, 
+  null as EndDate
 FROM PUBLIC.Fact_Sessions_Live base
 LEFT JOIN (
         --Identify the latest/live UserId tied to this GlobalUserId/ApplicationId
@@ -30,6 +32,7 @@ LEFT JOIN (
           FROM AuthDB_IS_Users 
         ) t WHERE t.RNK = 1
 ) iu ON UPPER(base.Application_Id) = iu.ApplicationId AND UPPER(base.Global_User_Id) = iu.GlobalUserId
+-- WHERE base.Identifier = 'end'
 WHERE base.Identifier = 'start'
 --Incremental Logic
 AND base.Batch_Id >= (SELECT COALESCE(MAX(Batch_Id),0) FROM EventCube.Sessions WHERE Src = 'newMetrics_Live') --Identify the last batch that was loaded)
