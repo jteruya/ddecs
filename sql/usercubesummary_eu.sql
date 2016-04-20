@@ -33,7 +33,8 @@ SELECT
   CASE WHEN sessions.Sessions >= 10 THEN 1 ELSE 0 END AS Engaged,
 
   --== Fact Data
-  COALESCE(Sessions,0) AS Sessions, 
+  COALESCE(Sessions,0) AS Sessions,
+  COALESCE(sessions.EventSessions, 0) AS EventSessions, 
   COALESCE(Posts,0) AS Posts, 
   COALESCE(PostsImage,0) AS PostsImage, 
   COALESCE(PostsItem,0) AS PostsItem, 
@@ -97,7 +98,7 @@ LEFT OUTER JOIN EventCube.V_DimUserSocialNetworks social ON u.UserId = social.Us
 LEFT OUTER JOIN EventCube.V_DimUserBinaryVersion binaryversion ON u.UserId = binaryversion.UserId
 
 --== User Facts
-LEFT OUTER JOIN (SELECT UserId, Sessions FROM EventCube.Agg_Session_per_AppUser) sessions ON u.UserId = sessions.UserId
+LEFT OUTER JOIN (SELECT UserId, Sessions, EventSessions FROM EventCube.Agg_Session_per_AppUser) sessions ON u.UserId = sessions.UserId
 LEFT OUTER JOIN (SELECT UserId, COUNT(*) AS Posts, SUM(HasImage) PostsImage, SUM(CASE WHEN ListType != 'Regular' THEN 1 ELSE 0 END) PostsItem FROM EventCube.V_FactPosts GROUP BY UserId) P ON U.UserId = P.UserId
 LEFT OUTER JOIN (SELECT UserId, COUNT(*) AS Likes FROM EventCube.V_FactLikes GROUP BY UserId) L ON U.UserId = L.UserId
 LEFT OUTER JOIN (SELECT UserId, COUNT(*) AS Comments FROM EventCube.V_FactComments GROUP BY UserId) C ON U.UserId = C.UserId
