@@ -1,3 +1,10 @@
+--==========================================================
+-- Increase PG Timeout Window to 180 Minutes
+--==========================================================
+
+SET statement_timeout = '180 min';
+COMMIT;
+
 --================================================================================================================================================================
 --NEW METRICS (Incremental Load) - DELSERT (Delete latest Batch, Reinsert from latest Batch)
 --1. Identify the new data to be loaded to stage

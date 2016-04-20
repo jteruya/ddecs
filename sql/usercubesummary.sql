@@ -1,3 +1,10 @@
+--==========================================================
+-- Increase PG Timeout Window to 180 Minutes
+--==========================================================
+
+SET statement_timeout = '180 min';
+COMMIT;
+
 --===================================================================================================
 -- * Upstream dependent on creation of all Dimension and Fact tables.
 -- Creates an aggregate at the User level with Application-level fields for slicing.
