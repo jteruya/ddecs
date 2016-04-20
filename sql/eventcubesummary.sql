@@ -1,4 +1,11 @@
 --==========================================================
+-- Increase PG Timeout Window to 180 Minutes
+--==========================================================
+
+SET statement_timeout = '180 min';
+COMMIT;
+
+--==========================================================
 -- Aggregation on the User Cube Summary at the Event level
 -- * Upstream dependency on User Cube Summary
 --==========================================================
@@ -78,7 +85,7 @@ SELECT
         COALESCE(E.Exhibitors,0) AS Exhibitors, 
         COALESCE(PC.Polls,0) AS Polls, 
         COALESCE(PR.PollResponses,0) AS PollResponses,
-        NULL AS TopicChannelCnt,
+        COALESCE(TC.TopicChannelCnt,0) AS TopicChannelCnt,
         NULL AS DirectMessagingSentCnt,
         NULL AS TopicChannelMsgSentCnt,
         NULL AS SessionChannelMsgSentCnt,
@@ -243,6 +250,16 @@ LEFT OUTER JOIN
         WHERE s.IsPoll = 'true'
         GROUP BY s.ApplicationId
 ) PR ON PR.ApplicationId = S.ApplicationId
+--== Channels Count
+LEFT OUTER JOIN
+(
+        SELECT 
+                UPPER(ApplicationId) ApplicationId
+              , COUNT(*) TopicChannelCnt
+        FROM Channels.Rooms
+        WHERE Type = 'TOPIC'
+        GROUP BY ApplicationId
+) TC ON S.ApplicationId = TC.ApplicationId
 ;
 
 -- Create the View for Reporter user 
