@@ -7,7 +7,7 @@
 --Identify the set of events for which we will be performing any Cubes (Events with Start Dates within the last N months, the future, or not yet set)
 DROP TABLE IF EXISTS EventCube.BaseApps;
 CREATE TABLE EventCube.BaseApps AS 
-SELECT A.ApplicationId, A.Name FROM AuthDB_Applications A
+SELECT A.ApplicationId, A.Name, A.StartDate, A.EndDate FROM AuthDB_Applications A
 JOIN PUBLIC.AuthDB_Bundles B ON A.BundleId = B.BundleId
 WHERE StartDate >= CAST(EXTRACT(YEAR FROM CURRENT_DATE - INTERVAL'13 months')||'-'||EXTRACT(MONTH FROM CURRENT_DATE - INTERVAL'13 months')||'-01 00:00:00' AS TIMESTAMP) --Past 13 months
 --== Static Test Event filters
