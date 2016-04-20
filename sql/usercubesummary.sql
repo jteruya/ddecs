@@ -58,6 +58,7 @@ SELECT
   
   --== Session Facts
   COALESCE(sessions.Sessions,0) AS Sessions, 
+  COALESCE(sessions.EventSessions, 0) AS EventSessions,
 
   --== Feature Indicators
   COALESCE(e.OpenEvent,-1) AS OpenEvent, 
@@ -69,12 +70,18 @@ SELECT
   COALESCE(e.Photofeed,-1) AS Photofeed, 
   COALESCE(e.AttendeesList,-1) AS AttendeesList, 
   COALESCE(e.QRCode,-1) AS QRCode, 
+  COALESCE(e.DirectMessaging,-1) AS DirectMessaging,
+  COALESCE(e.TopicChannel,-1) AS TopicChannel,
   COALESCE(e.ExhibitorReqInfo,-1) AS ExhibitorReqInfo, 
   COALESCE(e.ExhibitorMsg,-1) AS ExhibitorMsg, 
   COALESCE(e.PrivateMsging,-1) AS PrivateMsging, 
   COALESCE(e.PeopleMatching,-1) AS PeopleMatching, 
   COALESCE(e.SocialNetworks,-1) AS SocialNetworks, 
   COALESCE(e.RatingsOn,-1) AS RatingsOn,
+  COALESCE(e.NativeSessionNotes,-1) AS NativeSessionNotes,
+  COALESCE(e.SessionChannel, -1) AS SessionChannel,
+  COALESCE(e.SessionRecommendations, -1) AS SessionRecommendations,
+  COALESCE(e.PeopleRecommendations, -1) AS PeopleRecommendations,
 
   --== SalesForce Metadata
   COALESCE(SF.EventType,'_Unknown') AS EventType, 
@@ -122,6 +129,7 @@ SELECT
   base.Active, 
   base.Engaged,
   base.Sessions, 
+  base.EventSessions,
 
   --== Fact Data
   COALESCE(Posts,0) AS Posts, 
@@ -147,12 +155,18 @@ SELECT
   base.Photofeed, 
   base.AttendeesList, 
   base.QRCode, 
+  base.DirectMessaging,
+  base.TopicChannel,
   base.ExhibitorReqInfo, 
   base.ExhibitorMsg, 
   base.PrivateMsging, 
   base.PeopleMatching, 
   base.SocialNetworks, 
   base.RatingsOn,
+  base.NativeSessionNotes,
+  base.SessionChannel,
+  base.SessionRecommendations,
+  base.PeopleRecommendations,
   base.EventType, 
   base.EventSize, 
   base.AccountCustomerDomain, 
@@ -182,7 +196,7 @@ LEFT OUTER JOIN UserCubeSummary_Surveys V ON base.UserId = V.UserId
 TRUNCATE TABLE EventCube.STG_UserCubeSummary_INSERT;
 VACUUM EventCube.STG_UserCubeSummary_INSERT;
 INSERT INTO EventCube.STG_UserCubeSummary_INSERT
-SELECT ApplicationId, Name, StartDate, EndDate, GlobalUserId, UserId, FirstTimestamp, LastTimestamp, Facebook, Twitter, LinkedIn, Device, DeviceType, BinaryVersion, Active, Engaged, Sessions, Posts, PostsImage, PostsItem, Likes, Comments, TotalBookmarks, ImportedBookmarks, Follows, CheckIns, CheckInsHeadCount, Ratings, Reviews, Surveys, OpenEvent, LeadScanning, SurveysOn, InteractiveMap, Leaderboard, Bookmarking, PhotoFeed, AttendeesList, QRCode, ExhibitorReqInfo, ExhibitorMsg, PrivateMsging, PeopleMatching, SocialNetworks, RatingsOn, EventType, EventSize, AccountCustomerDomain, ServiceTierName, App365Indicator, OwnerName FROM (
+SELECT ApplicationId, Name, StartDate, EndDate, GlobalUserId, UserId, FirstTimestamp, LastTimestamp, Facebook, Twitter, LinkedIn, Device, DeviceType, BinaryVersion, Active, Engaged, Sessions, EventSessions, Posts, PostsImage, PostsItem, Likes, Comments, TotalBookmarks, ImportedBookmarks, Follows, CheckIns, CheckInsHeadCount, Ratings, Reviews, Surveys, OpenEvent, LeadScanning, SurveysOn, InteractiveMap, Leaderboard, Bookmarking, PhotoFeed, AttendeesList, QRCode, DirectMessaging, TopicChannel, ExhibitorReqInfo, ExhibitorMsg, PrivateMsging, PeopleMatching, SocialNetworks, RatingsOn, NativeSessionNotes, SessionChannel, SessionRecommendations, PeopleRecommendations, EventType, EventSize, AccountCustomerDomain, ServiceTierName, App365Indicator, OwnerName FROM (
 SELECT a.*, b.UserId AS bUserId FROM EventCube.STG_UserCubeSummary a
 --Forced to use the Left Join instead of NOT IN logic (due to performance)
 LEFT JOIN (SELECT DISTINCT UserId FROM EventCube.UserCubeSummary) b ON a.UserId = b.UserId
@@ -194,7 +208,8 @@ VACUUM EventCube.STG_UserCubeSummary_UPDATE;
 INSERT INTO EventCube.STG_UserCubeSummary_UPDATE
 SELECT * FROM EventCube.STG_UserCubeSummary WHERE UserId IN (SELECT UserId FROM EventCube.UserCubeSummary);
 
-INSERT INTO EventCube.UserCubeSummary SELECT *, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP FROM EventCube.STG_UserCubeSummary_INSERT;
+INSERT INTO EventCube.UserCubeSummary 
+SELECT *, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP FROM EventCube.STG_UserCubeSummary_INSERT;
 
 UPDATE EventCube.UserCubeSummary ucs 
 SET 
@@ -210,12 +225,18 @@ SET
   Photofeed = EventCube.STG_UserCubeSummary_UPDATE.Photofeed,
   AttendeesList = EventCube.STG_UserCubeSummary_UPDATE.AttendeesList,
   QRCode = EventCube.STG_UserCubeSummary_UPDATE.QRCode,
+  DirectMessaging = EventCube.STG_UserCubeSummary_UPDATE.DirectMessaging,
+  TopicChannel = EventCube.STG_UserCubeSummary_UPDATE.TopicChannel,
   ExhibitorReqInfo = EventCube.STG_UserCubeSummary_UPDATE.ExhibitorReqInfo,
   ExhibitorMsg = EventCube.STG_UserCubeSummary_UPDATE.ExhibitorMsg,
   PrivateMsging = EventCube.STG_UserCubeSummary_UPDATE.PrivateMsging,
   PeopleMatching = EventCube.STG_UserCubeSummary_UPDATE.PeopleMatching,
   SocialNetworks = EventCube.STG_UserCubeSummary_UPDATE.SocialNetworks,
   RatingsOn = EventCube.STG_UserCubeSummary_UPDATE.RatingsOn,
+  NativeSessionNotes = EventCube.STG_UserCubeSummary_UPDATE.NativeSessionNotes,
+  SessionChannel = EventCube.STG_UserCubeSummary_UPDATE.SessionChannel,
+  SessionRecommendations = EventCube.STG_UserCubeSummary_UPDATE.SessionRecommendations,
+  PeopleRecommendations = EventCube.STG_UserCubeSummary_UPDATE.PeopleRecommendations,
   EventType = EventCube.STG_UserCubeSummary_UPDATE.EventType,
   EventSize = EventCube.STG_UserCubeSummary_UPDATE.EventSize,
   AccountCustomerDomain = EventCube.STG_UserCubeSummary_UPDATE.AccountCustomerDomain,
@@ -233,6 +254,7 @@ SET
   Active = EventCube.STG_UserCubeSummary_UPDATE.Active,
   Engaged = EventCube.STG_UserCubeSummary_UPDATE.Engaged,
   Sessions = EventCube.STG_UserCubeSummary_UPDATE.Sessions,
+  EventSessions = EventCube.STG_UserCubeSummary_UPDATE.EventSessions,
   Posts = EventCube.STG_UserCubeSummary_UPDATE.Posts,
   PostsImage = EventCube.STG_UserCubeSummary_UPDATE.PostsImage,
   PostsItem = EventCube.STG_UserCubeSummary_UPDATE.PostsItem,
@@ -246,7 +268,7 @@ SET
   Ratings = EventCube.STG_UserCubeSummary_UPDATE.Ratings,
   Reviews = EventCube.STG_UserCubeSummary_UPDATE.Reviews,
   Surveys = EventCube.STG_UserCubeSummary_UPDATE.Surveys,
-  Updated = CURRENT_TIMESTAMP
+  Updated = CURRENT_TIMESTAMP 
 FROM EventCube.STG_UserCubeSummary_UPDATE
 WHERE EventCube.STG_UserCubeSummary_UPDATE.UserId = ucs.UserId;
 
