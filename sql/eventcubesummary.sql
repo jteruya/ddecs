@@ -24,12 +24,18 @@ SELECT
         Photofeed, 
         AttendeesList, 
         QRCode, 
+        DirectMessaging,
+        TopicChannel,
         ExhibitorReqInfo, 
         ExhibitorMsg, 
         PrivateMsging, 
         PeopleMatching, 
         SocialNetworks, 
         RatingsOn,
+        NativeSessionNotes,
+        SessionChannel,
+        SessionRecommendations,
+        PeopleRecommendations,
         
         --== SalesForce Metadata
         EventType, 
@@ -53,6 +59,7 @@ SELECT
         
         --== Fact Data
         Sessions, 
+        EventSessions,
         Posts, 
         PostsImage, 
         PostsItem, 
@@ -71,15 +78,15 @@ SELECT
         COALESCE(E.Exhibitors,0) AS Exhibitors, 
         COALESCE(PC.Polls,0) AS Polls, 
         COALESCE(PR.PollResponses,0) AS PollResponses,
+        NULL AS TopicChannelCnt,
+        NULL AS DirectMessagingSentCnt,
+        NULL AS TopicChannelMsgSentCnt,
+        NULL AS SessionChannelMsgSentCnt,
         
         --== Calculated Rates
-        ADOPTION_FOOL.Adoption/*,
+        ADOPTION_FOOL.Adoption,
+        CASE WHEN UsersActive > 0 THEN EventSessions/(UsersActive * (EndDate - StartDate + 1)) ELSE NULL END AS EventSessionsPerUsersPerDay
 
-        --== Test Event Flag
-        CASE
-           WHEN TE.ApplicationId IS NOT NULL THEN 1
-           ELSE 0
-        END AS TestEvent*/
 FROM
 --== Basic Aggregate from UserCubeSummary
 (       
@@ -97,12 +104,18 @@ FROM
                 Photofeed, 
                 AttendeesList, 
                 QRCode, 
+                DirectMessaging,
+                TopicChannel,                
                 ExhibitorReqInfo, 
                 ExhibitorMsg, 
                 PrivateMsging, 
                 PeopleMatching, 
                 SocialNetworks, 
                 RatingsOn,
+                NativeSessionNotes,
+                SessionChannel,
+                SessionRecommendations,
+                PeopleRecommendations,
                 EventType, 
                 EventSize, 
                 AccountCustomerDomain, 
@@ -117,6 +130,7 @@ FROM
                 SUM(CASE WHEN ISU.UserId IS NOT NULL THEN Twitter ELSE 0 END) AS UsersTwitter, 
                 SUM(CASE WHEN ISU.UserId IS NOT NULL THEN LinkedIn ELSE 0 END) AS UsersLinkedIn,
                 SUM(CASE WHEN ISU.UserId IS NOT NULL THEN Sessions ELSE 0 END) AS Sessions, 
+                SUM(CASE WHEN ISU.UserId IS NOT NULL THEN EventSessions ELSE 0 END) AS EventSessions, 
                 SUM(CASE WHEN ISU.UserId IS NOT NULL THEN Posts ELSE 0 END) AS Posts, 
                 SUM(CASE WHEN ISU.UserId IS NOT NULL THEN PostsImage ELSE 0 END) AS PostsImage, 
                 SUM(CASE WHEN ISU.UserId IS NOT NULL THEN PostsItem ELSE 0 END) AS PostsItem, 
@@ -136,7 +150,7 @@ FROM
               FROM Public.AuthDB_IS_Users
               WHERE IsDisabled = 0) ISU
         ON S.ApplicationId = ISU.ApplicationID AND S.UserId = ISU.UserId
-        GROUP BY S.ApplicationId, Name, StartDate, EndDate, OpenEvent, LeadScanning, SurveysOn, InteractiveMap, Leaderboard, Bookmarking, Photofeed, AttendeesList, QRCode, ExhibitorReqInfo, ExhibitorMsg, PrivateMsging, PeopleMatching, SocialNetworks, RatingsOn, EventType, EventSize, AccountCustomerDomain, ServiceTierName, App365Indicator, OwnerName
+        GROUP BY S.ApplicationId, Name, StartDate, EndDate, OpenEvent, LeadScanning, SurveysOn, InteractiveMap, Leaderboard, Bookmarking, Photofeed, AttendeesList, QRCode, DirectMessaging, TopicChannel, ExhibitorReqInfo, ExhibitorMsg, PrivateMsging, PeopleMatching, SocialNetworks, RatingsOn, NativeSessionNotes, SessionChannel, SessionRecommendations, PeopleRecommendations, EventType, EventSize, AccountCustomerDomain, ServiceTierName, App365Indicator, OwnerName
         
 ) S
 --== Get the Binary Version that was the majority
@@ -229,12 +243,6 @@ LEFT OUTER JOIN
         WHERE s.IsPoll = 'true'
         GROUP BY s.ApplicationId
 ) PR ON PR.ApplicationId = S.ApplicationId
---== Test Event Flag
-/*LEFT OUTER JOIN
-(
-        SELECT ApplicationId
-        FROM EventCube.TestEvents
-) TE ON S.ApplicationId = TE.ApplicationID*/
 ;
 
 -- Create the View for Reporter user 
