@@ -59,18 +59,20 @@ CREATE INDEX ndx_agg_devices_User ON EventCube.Agg_Devices_per_User(UserId);
 --Identify Session Aggregate at User-level
 DROP TABLE IF EXISTS EventCube.Agg_Session_per_AppUser CASCADE;
 CREATE TABLE EventCube.Agg_Session_per_AppUser AS 
-SELECT ApplicationId, UserId, 
-MIN(StartDate) AS FirstTimestamp, MAX(EndDate) AS LastTimestamp, 
-MIN(Binary_Version) AS FirstBinaryVersion, MAX(Binary_Version) AS LastBinaryVersion, 
-MIN(BinaryVersionInt) AS FirstBinaryVersionInt, MAX(BinaryVersionInt) AS LastBinaryVersionInt, 
+SELECT a.ApplicationId, a.UserId, 
+MIN(a.StartDate) AS FirstTimestamp, MAX(a.EndDate) AS LastTimestamp, 
+MIN(a.Binary_Version) AS FirstBinaryVersion, MAX(a.Binary_Version) AS LastBinaryVersion, 
+MIN(a.BinaryVersionInt) AS FirstBinaryVersionInt, MAX(a.BinaryVersionInt) AS LastBinaryVersionInt, 
 COUNT(*) AS Sessions,
 COUNT(CASE WHEN a.StartDate >= b.StartDate AND a.StartDate <= b.EndDate THEN 1 ELSE NULL END) AS EventSessions,
 SUM(CASE WHEN AppTypeId = 1 THEN 1 ELSE 0 END) AS iPhone_Sessions,
 SUM(CASE WHEN AppTypeId = 2 THEN 1 ELSE 0 END) AS iPad_Sessions,
 SUM(CASE WHEN AppTypeId = 3 THEN 1 ELSE 0 END) AS Android_Sessions,
 SUM(CASE WHEN AppTypeId = 4 THEN 1 ELSE 0 END) AS HTML5_Sessions
-FROM BaseSessions
-GROUP BY ApplicationId, UserId;
+FROM BaseSessions a
+JOIN EventCube.BaseApps b
+ON a.ApplicationId = b.ApplicationId
+GROUP BY a.ApplicationId, a.UserId;
 
 CREATE INDEX ndx_agg_sessions_User ON EventCube.Agg_Session_per_AppUser(ApplicationId);
 
