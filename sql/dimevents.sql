@@ -66,8 +66,8 @@ LEFT OUTER JOIN
   MAX(CASE WHEN TypeId = 11 THEN 1 ELSE 0 END) Photofeed,
   MAX(CASE WHEN TypeId = 8 THEN 1 ELSE 0 END) AttendeesList,
   MAX(CASE WHEN TypeId = 15 THEN 1 ELSE 0 END) QRCode,
-  MAX(CASE WHEN TypeId = 205 THEN 1 ELSE 0 END) DirectMessaging,
-  MAX(CASE WHEN TypeId = 206 THEN 1 ELSE 0 END) TopicChannel
+  MAX(CASE WHEN TypeId = 205 AND Selected = 'true' THEN 1 ELSE 0 END) DirectMessaging,
+  MAX(CASE WHEN TypeId = 206 AND Selected = 'true' THEN 1 ELSE 0 END) TopicChannel
   FROM PUBLIC.Ratings_ApplicationConfigGridItems
   GROUP BY ApplicationId
 ) G
