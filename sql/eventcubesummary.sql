@@ -92,7 +92,12 @@ SELECT
         
         --== Calculated Rates
         ADOPTION_FOOL.Adoption,
-        CASE WHEN UsersActive > 0 THEN EventSessions/(UsersActive * (EndDate - StartDate + 1)) ELSE NULL END AS EventSessionsPerUsersPerDay
+        CASE WHEN UsersActive > 0 THEN EventSessions/(UsersActive * (EndDate - StartDate + 1)) ELSE NULL END AS EventSessionsPerUsersPerDay,
+
+        --== Leads Scanned
+        COALESCE(LEADS_SCANNED.ScanningExhibitors,0) AS ScanningExhibitors,
+        COALESCE(LEADS_SCANNED.LeadsScannedTotal,0) AS LeadsScannedTotal,
+        COALESCE(LEADS_SCANNED.LeadsScannedUnique,0) AS LeadsScannedUnique
 
 FROM
 --== Basic Aggregate from UserCubeSummary
@@ -260,6 +265,19 @@ LEFT OUTER JOIN
         WHERE Type = 'TOPIC'
         GROUP BY ApplicationId
 ) TC ON S.ApplicationId = TC.ApplicationId
+--== Leads Scanned
+LEFT OUTER JOIN
+( SELECT
+    I.ApplicationId,
+    COUNT(DISTINCT L.ItemId) ScanningExhibitors,
+    COUNT(*) LeadsScannedTotal,
+    COUNT(DISTINCT L.UserId) LeadsScannedUnique
+  FROM PUBLIC.Ratings_Leads L
+  JOIN PUBLIC.Ratings_Item I
+  ON L.ItemId = I.ItemId
+  WHERE L.Source = 1
+  GROUP BY 1
+) LEADS_SCANNED ON E.ApplicationId = LEADS_SCANNED.ApplicationId
 ;
 
 -- Create the View for Reporter user 
