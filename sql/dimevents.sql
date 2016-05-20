@@ -79,7 +79,7 @@ LEFT OUTER JOIN
   MAX(CASE WHEN Name = 'ExhibitorMessagingEnabled' AND SettingValue = 'True' THEN 1 ELSE 0 END) ExhibitorMsg,
   MAX(CASE WHEN Name = 'MessagingEnabled' AND SettingValue = 'True' THEN 1 ELSE 0 END) PrivateMsging,
   MAX(CASE WHEN Name = 'EnablePeopleMatching' AND SettingValue = 'True' THEN 1 ELSE 0 END) PeopleMatching,
-  MAX(CASE WHEN Name = 'SocialNetworks' AND SettingValue IS NOT NULL THEN 1 ELSE 0 END) SocialNetworks,
+  MAX(case when Name='SocialNetworks' and ((settingvalue='') OR (settingvalue is NULL)) THEN 0 ELSE 1 END) SocialNetworks,
   MAX(CASE WHEN Name = 'EnableRatings' AND SettingValue = 'True' THEN 1 ELSE 0 END) RatingsOn,
   MAX(CASE WHEN Name = 'EnableSessionNotes' AND SettingValue = 'True' THEN 1 ELSE 0 END) NativeSessionNotes,
   MAX(CASE WHEN Name = 'SessionChannelsEnabled' AND SettingValue = 'True' THEN 1 ELSE 0 END) SessionChannel,
