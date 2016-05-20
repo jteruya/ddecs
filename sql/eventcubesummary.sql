@@ -287,7 +287,7 @@ LEFT OUTER JOIN
    FROM PUBLIC.Ratings_Item i
    JOIN PUBLIC.Ratings_Topic t ON i.ParentTopicId = t.TopicId
    WHERE ListTypeId = 2 AND i.IsDisabled = 0 AND i.IsArchived = 'false'
-   group by applicationid
+   group by i.applicationid
 ) AGENDA_SESSIONS ON E.ApplicationId = AGENDA_SESSIONS.ApplicationId
 ;
 
