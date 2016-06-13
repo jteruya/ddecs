@@ -83,6 +83,7 @@ SELECT
         COALESCE(PromotedPosts,0) AS PromotedPosts, 
         COALESCE(GlobalPushNotifications,0) AS GlobalPushNotifications,
         COALESCE(E.Exhibitors,0) AS Exhibitors, 
+        COALESCE(AGENDA_SESSIONS.TotalAgendaSessions,0) AS TotalAgendaSessions,
         COALESCE(PC.Polls,0) AS Polls, 
         COALESCE(PR.PollResponses,0) AS PollResponses,
         COALESCE(TC.TopicChannelCnt,0) AS TopicChannelCnt,
@@ -278,6 +279,16 @@ LEFT OUTER JOIN
   WHERE L.Source = 1
   GROUP BY 1
 ) LEADS_SCANNED ON E.ApplicationId = LEADS_SCANNED.ApplicationId
+--== Agenda Sessions
+LEFT OUTER JOIN 
+(  SELECT 
+     i.ApplicationId, 
+     COUNT(DISTINCT ItemId) AS TotalAgendaSessions
+   FROM PUBLIC.Ratings_Item i
+   JOIN PUBLIC.Ratings_Topic t ON i.ParentTopicId = t.TopicId
+   WHERE ListTypeId = 2 AND i.IsDisabled = 0 AND i.IsArchived = 'false'
+   group by i.applicationid
+) AGENDA_SESSIONS ON S.ApplicationId = AGENDA_SESSIONS.ApplicationId
 ;
 
 -- Create the View for Reporter user 
