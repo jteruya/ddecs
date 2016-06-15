@@ -288,7 +288,7 @@ LEFT OUTER JOIN
    JOIN PUBLIC.Ratings_Topic t ON i.ParentTopicId = t.TopicId
    WHERE ListTypeId = 2 AND i.IsDisabled = 0 AND i.IsArchived = 'false'
    group by i.applicationid
-) AGENDA_SESSIONS ON E.ApplicationId = AGENDA_SESSIONS.ApplicationId
+) AGENDA_SESSIONS ON S.ApplicationId = AGENDA_SESSIONS.ApplicationId
 ;
 
 -- Create the View for Reporter user 
