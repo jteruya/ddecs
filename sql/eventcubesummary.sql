@@ -168,7 +168,7 @@ FROM
 ) S
 --== Get the Binary Version that was the majority
 JOIN EventCube.V_DimEventBinaryVersion BV ON S.ApplicationId = BV.Applicationid
---== Get the Registrant Count (Users listed in the App, for Closed Events)
+--== Get the Registrant Count (Users listed in the App, for Closed Events and Open Events)
 LEFT OUTER JOIN
 (
         SELECT 
@@ -176,7 +176,7 @@ LEFT OUTER JOIN
                 COUNT(DISTINCT u.UserId) AS Registrants
         FROM PUBLIC.AuthDB_IS_Users u
         JOIN PUBLIC.AuthDB_Applications a ON u.ApplicationId = a.ApplicationId
-        WHERE u.IsDisabled = 0 AND a.CanRegister = 'false'
+        WHERE u.IsDisabled = 0
         GROUP BY u.ApplicationId
 ) R ON S.ApplicationId = R.ApplicationId
 --== Get the count of Unique Devices that have accessed the Event App
