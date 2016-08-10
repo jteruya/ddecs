@@ -58,14 +58,14 @@ JOIN (SELECT DISTINCT ApplicationId FROM EventCube.DimUsers) U ON A.ApplicationI
 
 LEFT OUTER JOIN
 ( SELECT ApplicationId,
-  MAX(CASE WHEN TypeId = 14 THEN 1 ELSE 0 END) LeadScanning,
-  MAX(CASE WHEN TypeId = 12 THEN 1 ELSE 0 END) SurveysOn,
-  MAX(CASE WHEN TypeId = 10 THEN 1 ELSE 0 END) InteractiveMap,
-  MAX(CASE WHEN TypeId = 6 THEN 1 ELSE 0 END) Leaderboard,
-  MAX(CASE WHEN TypeId = 7 THEN 1 ELSE 0 END) Bookmarking,
-  MAX(CASE WHEN TypeId = 11 THEN 1 ELSE 0 END) Photofeed,
-  MAX(CASE WHEN TypeId = 8 THEN 1 ELSE 0 END) AttendeesList,
-  MAX(CASE WHEN TypeId = 15 THEN 1 ELSE 0 END) QRCode,
+  MAX(CASE WHEN TypeId = 14 AND selected = 'true' THEN 1 ELSE 0 END) LeadScanning,
+  MAX(CASE WHEN TypeId = 12 AND selected = 'true' THEN 1 ELSE 0 END) SurveysOn,
+  MAX(CASE WHEN TypeId = 10 AND selected = 'true' THEN 1 ELSE 0 END) InteractiveMap,
+  MAX(CASE WHEN TypeId = 6 AND selected = 'true' THEN 1 ELSE 0 END) Leaderboard,
+  MAX(CASE WHEN TypeId = 7 AND selected = 'true' THEN 1 ELSE 0 END) Bookmarking,
+  MAX(CASE WHEN TypeId = 11 AND selected = 'true' THEN 1 ELSE 0 END) Photofeed,
+  MAX(CASE WHEN TypeId = 8 AND selected = 'true' THEN 1 ELSE 0 END) AttendeesList,
+  MAX(CASE WHEN TypeId = 15 AND selected = 'true' THEN 1 ELSE 0 END) QRCode,
   MAX(CASE WHEN TypeId = 205 AND Selected = 'true' THEN 1 ELSE 0 END) DirectMessaging,
   MAX(CASE WHEN TypeId = 206 AND Selected = 'true' THEN 1 ELSE 0 END) TopicChannel
   FROM PUBLIC.Ratings_ApplicationConfigGridItems
