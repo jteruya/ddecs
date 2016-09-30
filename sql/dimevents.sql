@@ -48,9 +48,10 @@ COALESCE(RatingsOn,0) AS RatingsOn,
 COALESCE(NativeSessionNotes,0) AS NativeSessionNotes,
 COALESCE(SessionChannel,0) AS SessionChannel,
 COALESCE(SessionRecommendations,0) AS SessionRecommendations,
-COALESCE(PeopleRecommendations,0) AS PeopleRecommendations
-
-
+COALESCE(PeopleRecommendations,0) AS PeopleRecommendations,
+COALESCE(AttendeeSessionScans, 0) AS AttendeeSessionScans,
+COALESCE(OrganizerOnlyFeed, 0) AS OrganizerOnlyFeed,
+CASE WHEN N.ApplicationId IS NOT NULL THEN 1 ELSE 0 END AS NestedAgenda
 
 FROM PUBLIC.AuthDB_Applications A
 
@@ -84,10 +85,27 @@ LEFT OUTER JOIN
   MAX(CASE WHEN Name = 'EnableSessionNotes' AND SettingValue = 'True' THEN 1 ELSE 0 END) NativeSessionNotes,
   MAX(CASE WHEN Name = 'SessionChannelsEnabled' AND SettingValue = 'True' THEN 1 ELSE 0 END) SessionChannel,
   MAX(CASE WHEN Name = 'EnableSessionRecommendation' AND SettingValue = 'True' THEN 1 ELSE 0 END) SessionRecommendations,
-  MAX(CASE WHEN Name = 'EnablePeopleRecommendation' AND SettingValue = 'True' THEN 1 ELSE 0 END) PeopleRecommendations
+  MAX(CASE WHEN Name = 'EnablePeopleRecommendation' AND SettingValue = 'True' THEN 1 ELSE 0 END) PeopleRecommendations,
+  MAX(CASE WHEN Name = 'EnableSessionScans' AND SettingValue = 'True' THEN 1 ELSE 0 END) AttendeeSessionScans,
+  MAX(CASE WHEN Name = 'DisableStatusUpdate' AND SettingValue = 'True' THEN 1 ELSE 0 END) OrganizerOnlyFeed
   FROM PUBLIC.Ratings_ApplicationConfigSettings
   GROUP BY ApplicationId
 ) S
-ON U.ApplicationId = S.ApplicationId;
+ON U.ApplicationId = S.ApplicationId
+
+-- Nest Agenda (Look for )
+LEFT OUTER JOIN 
+( SELECT DISTINCT ITEM.ApplicationId
+  FROM Ratings_Item ITEM
+  JOIN Ratings_Topic TOPIC
+  ON ITEM.ParentTopicId = TOPIC.TopicId
+  WHERE ITEM.ParentItemId IS NOT NULL
+  AND ITEM.IsDisabled = 0
+  AND TOPIC.IsDisabled = 0
+  AND TOPIC.ListTypeId = 2
+  AND TOPIC.IsHidden = false
+) N
+ON U.ApplicationId = N.ApplicationId
+;
 
 --CREATE INDEX ndx_ecs_dimevents_applicationid ON EventCube.DimEvents (ApplicationId);

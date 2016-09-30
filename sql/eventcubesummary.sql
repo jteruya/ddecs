@@ -43,6 +43,9 @@ SELECT
         SessionChannel,
         SessionRecommendations,
         PeopleRecommendations,
+        AttendeeSessionScans,
+        OrganizerOnlyFeed,
+        NestedAgenda,
         
         --== SalesForce Metadata
         EventType, 
@@ -129,6 +132,9 @@ FROM
                 SessionChannel,
                 SessionRecommendations,
                 PeopleRecommendations,
+                AttendeeSessionScans,
+                OrganizerOnlyFeed,
+                NestedAgenda,
                 EventType, 
                 EventSize, 
                 AccountCustomerDomain, 
@@ -163,7 +169,7 @@ FROM
               FROM Public.AuthDB_IS_Users
               WHERE IsDisabled = 0) ISU
         ON S.ApplicationId = ISU.ApplicationID AND S.UserId = ISU.UserId
-        GROUP BY S.ApplicationId, Name, StartDate, EndDate, OpenEvent, LeadScanning, SurveysOn, InteractiveMap, Leaderboard, Bookmarking, Photofeed, AttendeesList, QRCode, DirectMessaging, TopicChannel, ExhibitorReqInfo, ExhibitorMsg, PrivateMsging, PeopleMatching, SocialNetworks, RatingsOn, NativeSessionNotes, SessionChannel, SessionRecommendations, PeopleRecommendations, EventType, EventSize, AccountCustomerDomain, ServiceTierName, App365Indicator, OwnerName
+        GROUP BY S.ApplicationId, Name, StartDate, EndDate, OpenEvent, LeadScanning, SurveysOn, InteractiveMap, Leaderboard, Bookmarking, Photofeed, AttendeesList, QRCode, DirectMessaging, TopicChannel, ExhibitorReqInfo, ExhibitorMsg, PrivateMsging, PeopleMatching, SocialNetworks, RatingsOn, NativeSessionNotes, SessionChannel, SessionRecommendations, PeopleRecommendations, AttendeeSessionScans, OrganizerOnlyFeed, NestedAgenda, EventType, EventSize, AccountCustomerDomain, ServiceTierName, App365Indicator, OwnerName
         
 ) S
 --== Get the Binary Version that was the majority
