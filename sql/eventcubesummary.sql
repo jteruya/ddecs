@@ -43,9 +43,6 @@ SELECT
         SessionChannel,
         SessionRecommendations,
         PeopleRecommendations,
-        AttendeeSessionScans,
-        OrganizerOnlyFeed,
-        NestedAgenda,
         
         --== SalesForce Metadata
         EventType, 
@@ -67,7 +64,7 @@ SELECT
         UsersTwitter, 
         UsersLinkedIn, 
         
-        --== Fact Data
+        --== Ratings & Fact Data
         Sessions, 
         EventSessions,
         Posts, 
@@ -82,6 +79,7 @@ SELECT
         CheckInsHeadcount, 
         Ratings, 
         Reviews, 
+        Surveys_setup_count,
         Surveys,
         COALESCE(PromotedPosts,0) AS PromotedPosts, 
         COALESCE(GlobalPushNotifications,0) AS GlobalPushNotifications,
@@ -132,9 +130,6 @@ FROM
                 SessionChannel,
                 SessionRecommendations,
                 PeopleRecommendations,
-                AttendeeSessionScans,
-                OrganizerOnlyFeed,
-                NestedAgenda,
                 EventType, 
                 EventSize, 
                 AccountCustomerDomain, 
@@ -169,7 +164,7 @@ FROM
               FROM Public.AuthDB_IS_Users
               WHERE IsDisabled = 0) ISU
         ON S.ApplicationId = ISU.ApplicationID AND S.UserId = ISU.UserId
-        GROUP BY S.ApplicationId, Name, StartDate, EndDate, OpenEvent, LeadScanning, SurveysOn, InteractiveMap, Leaderboard, Bookmarking, Photofeed, AttendeesList, QRCode, DirectMessaging, TopicChannel, ExhibitorReqInfo, ExhibitorMsg, PrivateMsging, PeopleMatching, SocialNetworks, RatingsOn, NativeSessionNotes, SessionChannel, SessionRecommendations, PeopleRecommendations, AttendeeSessionScans, OrganizerOnlyFeed, NestedAgenda, EventType, EventSize, AccountCustomerDomain, ServiceTierName, App365Indicator, OwnerName
+        GROUP BY S.ApplicationId, Name, StartDate, EndDate, OpenEvent, LeadScanning, SurveysOn, InteractiveMap, Leaderboard, Bookmarking, Photofeed, AttendeesList, QRCode, DirectMessaging, TopicChannel, ExhibitorReqInfo, ExhibitorMsg, PrivateMsging, PeopleMatching, SocialNetworks, RatingsOn, NativeSessionNotes, SessionChannel, SessionRecommendations, PeopleRecommendations, EventType, EventSize, AccountCustomerDomain, ServiceTierName, App365Indicator, OwnerName
         
 ) S
 --== Get the Binary Version that was the majority
@@ -195,11 +190,15 @@ LEFT OUTER JOIN EventCube.Agg_Devices_per_App D ON S.ApplicationId = D.Applicati
 --== PROMOTED POSTS
 LEFT OUTER JOIN
 ( 
+        
         SELECT 
-                ApplicationId, 
+                P.ApplicationId, 
                 COUNT(*) PromotedPosts
-        FROM PUBLIC.Ratings_PromotedPosts
-        GROUP BY ApplicationId
+        FROM PUBLIC.Ratings_PromotedPosts P
+        JOIN AuthDB_Applications a ON A.applicationid = P.ApplicationId
+        WHERE P.IsDisabled = false
+            AND P.displayafter < a.startdate+ INTERVAL '1 year'
+        GROUP BY P.ApplicationId
 ) P ON S.ApplicationId = P.ApplicationId
 --== GLOBAL MESSAGES
 LEFT OUTER JOIN
@@ -207,8 +206,9 @@ LEFT OUTER JOIN
         SELECT 
                 ApplicationId, 
                 COUNT(*) GlobalPushNotifications
-        FROM PUBLIC.Ratings_GlobalMessages
-        GROUP BY ApplicationId
+        FROM PUBLIC.Ratings_GlobalMessages G
+        JOIN AuthDB_Applications a ON A.applicationid = G.ApplicationId
+                 GROUP BY ApplicationId
 ) G ON S.ApplicationId = G.ApplicationId
 --== Adoption Percentage
 LEFT OUTER JOIN
@@ -247,9 +247,25 @@ LEFT OUTER JOIN
                 S.ApplicationId, 
                 1.0 * count(S.ApplicationId) Polls 
         FROM PUBLIC.Ratings_Surveys S 
-        WHERE S.IsPoll = 'true'
+        JOIN AuthDB_Applications a ON A.applicationid = S.ApplicationId
+        WHERE S.IsPoll = 'true' AND s.isdisabled =false
         GROUP BY S.ApplicationId
 ) PC ON PC.ApplicationId = S.ApplicationId
+--surveys setup
+LEFT OUTER JOIN
+( 
+        SELECT 
+                S.ApplicationId, 
+                1.0 * count(S.ApplicationId) surveys_setup_count 
+        FROM PUBLIC.Ratings_Surveys S 
+        JOIN AuthDB_Applications a ON A.applicationid = S.ApplicationId
+        WHERE S.IsPoll = 'false' AND s.isdisabled =false
+        GROUP BY S.ApplicationId
+) surveys_setup ON surveys_setup.ApplicationId = S.ApplicationId
+
+
+
+
 --== Polls Responses
 LEFT OUTER JOIN
 ( 
