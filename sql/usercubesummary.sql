@@ -11,34 +11,34 @@ COMMIT;
 --===================================================================================================
 
 -- Perform aggregates in memory before join
-CREATE TEMPORARY TABLE UserCubeSummary_Posts TABLESPACE FastStorage AS
+CREATE TEMPORARY TABLE UserCubeSummary_Posts AS
 SELECT F.UserId, COUNT(*) AS Posts, SUM(HasImage) PostsImage, SUM(CASE WHEN ListType != 'Regular' THEN 1 ELSE 0 END) AS PostsItem FROM EventCube.V_FactPosts F JOIN EventCube.DimUsers du ON F.UserId = du.UserId GROUP BY F.UserId;
 
-CREATE TEMPORARY TABLE UserCubeSummary_Likes TABLESPACE FastStorage AS
+CREATE TEMPORARY TABLE UserCubeSummary_Likes AS
 SELECT F.UserId, COUNT(*) AS Likes FROM EventCube.V_FactLikes F JOIN EventCube.DimUsers du ON F.UserId = du.UserId GROUP BY F.UserId;
 
-CREATE TEMPORARY TABLE UserCubeSummary_Comments TABLESPACE FastStorage AS
+CREATE TEMPORARY TABLE UserCubeSummary_Comments AS
 SELECT F.UserId, COUNT(*) AS Comments FROM EventCube.V_FactComments F JOIN EventCube.DimUsers du ON F.UserId = du.UserId GROUP BY F.UserId;
 
-CREATE TEMPORARY TABLE UserCubeSummary_TotalBookmarks TABLESPACE FastStorage AS
+CREATE TEMPORARY TABLE UserCubeSummary_TotalBookmarks AS
 SELECT F.UserId, COUNT(*) AS TotalBookmarks, SUM(CASE WHEN IsImported IS NULL THEN 0 WHEN IsImported IS false THEN 0 ELSE 1 END) AS ImportedBookmarks FROM EventCube.V_FactBookmarks F JOIN EventCube.DimUsers du ON F.UserId = du.UserId GROUP BY F.UserId;
 
-CREATE TEMPORARY TABLE UserCubeSummary_Follows TABLESPACE FastStorage AS
+CREATE TEMPORARY TABLE UserCubeSummary_Follows AS
 SELECT F.UserId, COUNT(*) AS Follows FROM EventCube.V_FactFollows F JOIN EventCube.DimUsers du ON F.UserId = du.UserId GROUP BY F.UserId;
 
-CREATE TEMPORARY TABLE UserCubeSummary_CheckIns TABLESPACE FastStorage AS
+CREATE TEMPORARY TABLE UserCubeSummary_CheckIns AS
 SELECT F.UserId, COUNT(*) AS CheckIns, SUM(IsHeadcount) AS CheckInsHeadcount FROM EventCube.V_FactCheckIns F JOIN EventCube.DimUsers du ON F.UserId = du.UserId GROUP BY F.UserId;
 
-CREATE TEMPORARY TABLE UserCubeSummary_Ratings TABLESPACE FastStorage AS
+CREATE TEMPORARY TABLE UserCubeSummary_Ratings AS
 SELECT F.UserId, COUNT(*) AS Ratings, SUM(HasReview) AS Reviews FROM EventCube.V_FactRatings F JOIN EventCube.DimUsers du ON F.UserId = du.UserId GROUP BY F.UserId;
 
-CREATE TEMPORARY TABLE UserCubeSummary_Surveys TABLESPACE FastStorage AS
+CREATE TEMPORARY TABLE UserCubeSummary_Surveys AS
 SELECT F.UserId, COUNT(*) AS Surveys FROM EventCube.V_FactSurveys F JOIN EventCube.DimUsers du ON F.UserId = du.UserId GROUP BY F.UserId;
 
 --===================================================================================================
 --== Set the Base for the UserCubeSummary
 
-CREATE TEMPORARY TABLE STG_UserCubeSummary_Base TABLESPACE FastStorage AS 
+CREATE TEMPORARY TABLE STG_UserCubeSummary_Base AS 
 SELECT 
   --== Application Metadata
   u.ApplicationId, 
@@ -89,6 +89,9 @@ SELECT
   COALESCE(e.SessionChannel, -1) AS SessionChannel,
   COALESCE(e.SessionRecommendations, -1) AS SessionRecommendations,
   COALESCE(e.PeopleRecommendations, -1) AS PeopleRecommendations,
+  COALESCE(e.AttendeeSessionScans, -1) AS AttendeeSessionScans,
+  COALESCE(e.OrganizerOnlyFeed, -1) AS OrganizerOnlyFeed,
+  COALESCE(e.NestedAgenda, -1) AS NestedAgenda,
 
   --== SalesForce Metadata
   COALESCE(SF.EventType,'_Unknown') AS EventType, 
@@ -174,6 +177,9 @@ SELECT
   base.SessionChannel,
   base.SessionRecommendations,
   base.PeopleRecommendations,
+  base.AttendeeSessionScans,
+  base.OrganizerOnlyFeed,
+  base.NestedAgenda,
   base.EventType, 
   base.EventSize, 
   base.AccountCustomerDomain, 
@@ -203,7 +209,7 @@ LEFT OUTER JOIN UserCubeSummary_Surveys V ON base.UserId = V.UserId
 TRUNCATE TABLE EventCube.STG_UserCubeSummary_INSERT;
 VACUUM EventCube.STG_UserCubeSummary_INSERT;
 INSERT INTO EventCube.STG_UserCubeSummary_INSERT
-SELECT ApplicationId, Name, StartDate, EndDate, GlobalUserId, UserId, FirstTimestamp, LastTimestamp, Facebook, Twitter, LinkedIn, Device, DeviceType, BinaryVersion, Active, Engaged, Sessions, EventSessions, Posts, PostsImage, PostsItem, Likes, Comments, TotalBookmarks, ImportedBookmarks, Follows, CheckIns, CheckInsHeadCount, Ratings, Reviews, Surveys, OpenEvent, LeadScanning, SurveysOn, InteractiveMap, Leaderboard, Bookmarking, PhotoFeed, AttendeesList, QRCode, DirectMessaging, TopicChannel, ExhibitorReqInfo, ExhibitorMsg, PrivateMsging, PeopleMatching, SocialNetworks, RatingsOn, NativeSessionNotes, SessionChannel, SessionRecommendations, PeopleRecommendations, EventType, EventSize, AccountCustomerDomain, ServiceTierName, App365Indicator, OwnerName FROM (
+SELECT ApplicationId, Name, StartDate, EndDate, GlobalUserId, UserId, FirstTimestamp, LastTimestamp, Facebook, Twitter, LinkedIn, Device, DeviceType, BinaryVersion, Active, Engaged, Sessions, EventSessions, Posts, PostsImage, PostsItem, Likes, Comments, TotalBookmarks, ImportedBookmarks, Follows, CheckIns, CheckInsHeadCount, Ratings, Reviews, Surveys, OpenEvent, LeadScanning, SurveysOn, InteractiveMap, Leaderboard, Bookmarking, PhotoFeed, AttendeesList, QRCode, DirectMessaging, TopicChannel, ExhibitorReqInfo, ExhibitorMsg, PrivateMsging, PeopleMatching, SocialNetworks, RatingsOn, NativeSessionNotes, SessionChannel, SessionRecommendations, PeopleRecommendations, AttendeeSessionScans, OrganizerOnlyFeed, NestedAgenda, EventType, EventSize, AccountCustomerDomain, ServiceTierName, App365Indicator, OwnerName FROM (
 SELECT a.*, b.UserId AS bUserId FROM EventCube.STG_UserCubeSummary a
 --Forced to use the Left Join instead of NOT IN logic (due to performance)
 LEFT JOIN (SELECT DISTINCT UserId FROM EventCube.UserCubeSummary) b ON a.UserId = b.UserId
@@ -244,6 +250,9 @@ SET
   SessionChannel = EventCube.STG_UserCubeSummary_UPDATE.SessionChannel,
   SessionRecommendations = EventCube.STG_UserCubeSummary_UPDATE.SessionRecommendations,
   PeopleRecommendations = EventCube.STG_UserCubeSummary_UPDATE.PeopleRecommendations,
+  AttendeeSessionScans = EventCube.STG_UserCubeSummary_UPDATE.AttendeeSessionScans,
+  OrganizerOnlyFeed = EventCube.STG_UserCubeSummary_UPDATE.OrganizerOnlyFeed,
+  NestedAgenda = EventCube.STG_UserCubeSummary_UPDATE.NestedAgenda,
   EventType = EventCube.STG_UserCubeSummary_UPDATE.EventType,
   EventSize = EventCube.STG_UserCubeSummary_UPDATE.EventSize,
   AccountCustomerDomain = EventCube.STG_UserCubeSummary_UPDATE.AccountCustomerDomain,
