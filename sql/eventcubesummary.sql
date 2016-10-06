@@ -105,7 +105,7 @@ SELECT
         COALESCE(LEADS_SCANNED.LeadsScannedUnique,0) AS LeadsScannedUnique,
 
         --==Welcom Email Data
-        COALESCE(welcome_count,0)
+        COALESCE(welcome_count,0) AS WelcomeEmailCount
 
 FROM
 --== Basic Aggregate from UserCubeSummary
