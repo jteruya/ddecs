@@ -46,6 +46,10 @@ SELECT
         AttendeeSessionScans,
         OrganizerOnlyFeed,
         NestedAgenda,
+        TargetedOffers,
+        AdsInActivityFeed,
+        AttendeeMeetings,
+        ExhibitorMeetings,
 
         --== SalesForce Metadata
         EventType,
@@ -82,7 +86,7 @@ SELECT
         CheckInsHeadcount,
         Ratings,
         Reviews,
-        Surveys--number of survey responses received,
+        Surveys,--number of survey responses received,
         COALESCE(Surveys_setup_count,0) AS SurveySetupCount,
         COALESCE(PromotedPosts,0) AS PromotedPosts,
         COALESCE(GlobalPushNotifications,0) AS GlobalPushNotifications,
@@ -105,7 +109,7 @@ SELECT
         COALESCE(LEADS_SCANNED.LeadsScannedUnique,0) AS LeadsScannedUnique,
 
         --==Welcom Email Data
-        COALESCE(welcome_count,0) AS WelcomeEmailCount,
+        COALESCE(WelcomeEmailCount,0) AS WelcomeEmailCount,
 
         --==CMS Usage
         FirstCMSLogin
@@ -142,6 +146,10 @@ FROM
                 AttendeeSessionScans,
                 OrganizerOnlyFeed,
                 NestedAgenda,
+                TargetedOffers,
+                AdsInActivityFeed,
+                AttendeeMeetings,
+                ExhibitorMeetings,
                 EventType,
                 EventSize,
                 AccountCustomerDomain,
@@ -176,7 +184,7 @@ FROM
               FROM Public.AuthDB_IS_Users
               WHERE IsDisabled = 0) ISU
         ON S.ApplicationId = ISU.ApplicationID AND S.UserId = ISU.UserId
-        GROUP BY S.ApplicationId, Name, StartDate, EndDate, OpenEvent, LeadScanning, SurveysOn, InteractiveMap, Leaderboard, Bookmarking, Photofeed, AttendeesList, QRCode, DirectMessaging, TopicChannel, ExhibitorReqInfo, ExhibitorMsg, PrivateMsging, PeopleMatching, SocialNetworks, RatingsOn, NativeSessionNotes, SessionChannel, SessionRecommendations, PeopleRecommendations, AttendeeSessionScans, OrganizerOnlyFeed, NestedAgenda, EventType, EventSize, AccountCustomerDomain, ServiceTierName, App365Indicator, OwnerName
+        GROUP BY S.ApplicationId, Name, StartDate, EndDate, OpenEvent, LeadScanning, SurveysOn, InteractiveMap, Leaderboard, Bookmarking, Photofeed, AttendeesList, QRCode, DirectMessaging, TopicChannel, ExhibitorReqInfo, ExhibitorMsg, PrivateMsging, PeopleMatching, SocialNetworks, RatingsOn, NativeSessionNotes, SessionChannel, SessionRecommendations, PeopleRecommendations, AttendeeSessionScans, OrganizerOnlyFeed, NestedAgenda, TargetedOffers, AdsInActivityFeed, AttendeeMeetings, ExhibitorMeetings,EventType, EventSize, AccountCustomerDomain, ServiceTierName, App365Indicator, OwnerName
 
 ) S
 --== Get the Binary Version that was the majority
@@ -322,11 +330,11 @@ LEFT OUTER JOIN
 
 ---==WelcomeEmailCount
 LEFT JOIN
-( SELECT UPPER(Applicationid), COUNT(*) WelcomeEmailCount
+( SELECT Applicationid, COUNT(*) WelcomeEmailCount
   FROM MAILGUN.Mailguncube
-  WHERE subject LIKE 'Welcome to%'
+  WHERE subject ILIKE 'Welcome to%'
   GROUP BY 1) WC
-ON WC.ApplicationID = s.ApplicationID
+ON UPPER(WC.ApplicationID::VARCHAR) = s.ApplicationID
 
 
 --==FirstCMSLogin

@@ -36,8 +36,8 @@ COALESCE(Bookmarking,0) AS Bookmarking,
 COALESCE(Photofeed,0) AS Photofeed,
 COALESCE(AttendeesList,0) AS AttendeesList,
 COALESCE(QRCode,0) AS QRCode,
-COALESCE(DirectMessaging,0) AS DirectMessaging,
-COALESCE(TopicChannel,0) AS TopicChannel,
+CASE WHEN V.ApplicationId IS NOT NULL AND V.ParentBinaryVersion >= '6.00' THEN COALESCE(DirectMessaging,0) ELSE 0 END AS DirectMessaging,
+CASE WHEN V.ApplicationId IS NOT NULL AND V.ParentBinaryVersion >= '6.02' THEN COALESCE(TopicChannel,0) ELSE 0 END AS TopicChannel,
 
 COALESCE(ExhibitorReqInfo,0) AS ExhibitorReqInfo,
 COALESCE(ExhibitorMsg,0) AS ExhibitorMsg,
@@ -45,13 +45,18 @@ COALESCE(PrivateMsging,0) AS PrivateMsging,
 COALESCE(PeopleMatching,0) AS PeopleMatching,
 COALESCE(SocialNetworks,0) AS SocialNetworks,
 COALESCE(RatingsOn,0) AS RatingsOn,
-COALESCE(NativeSessionNotes,0) AS NativeSessionNotes,
-COALESCE(SessionChannel,0) AS SessionChannel,
-COALESCE(SessionRecommendations,0) AS SessionRecommendations,
-COALESCE(PeopleRecommendations,0) AS PeopleRecommendations,
-COALESCE(AttendeeSessionScans, 0) AS AttendeeSessionScans,
-COALESCE(OrganizerOnlyFeed, 0) AS OrganizerOnlyFeed,
-CASE WHEN N.ApplicationId IS NOT NULL THEN 1 ELSE 0 END AS NestedAgenda
+CASE WHEN V.ApplicationId IS NOT NULL AND V.ParentBinaryVersion >= '6.03' THEN COALESCE(NativeSessionNotes,0) ELSE 0 END AS NativeSessionNotes,
+CASE WHEN V.ApplicationId IS NOT NULL AND V.ParentBinaryVersion >= '6.08' THEN COALESCE(SessionChannel,0) ELSE 0 END AS SessionChannel,
+CASE WHEN V.ApplicationId IS NOT NULL AND V.ParentBinaryVersion >= '6.11' THEN COALESCE(SessionRecommendations,0) ELSE 0 END AS SessionRecommendations,
+CASE WHEN V.ApplicationId IS NOT NULL AND V.ParentBinaryVersion >= '6.11' THEN COALESCE(PeopleRecommendations,0) ELSE 0 END AS PeopleRecommendations,
+CASE WHEN V.ApplicationId IS NOT NULL AND V.ParentBinaryVersion >= '6.07' THEN COALESCE(AttendeeSessionScans, 0) ELSE 0 END AS AttendeeSessionScans,
+CASE WHEN V.ApplicationId IS NOT NULL AND V.ParentBinaryVersion >= '6.05' THEN COALESCE(OrganizerOnlyFeed, 0) ELSE 0 END AS OrganizerOnlyFeed,
+CASE WHEN N.ApplicationId IS NOT NULL AND V.ApplicationId IS NOT NULL AND V.ParentBinaryVersion >= '6.17' THEN 1 ELSE 0 END AS NestedAgenda,
+CASE WHEN V.ApplicationId IS NOT NULL AND V.ParentBinaryVersion >= '6.25' THEN COALESCE(TargetedOffers, 0) ELSE 0 END AS TargetedOffers,
+CASE WHEN V.ApplicationId IS NOT NULL AND V.ParentBinaryVersion >= '6.25' THEN COALESCE(AdsInActivityFeed, 0) ELSE 0 END AS AdsInActivityFeed,
+CASE WHEN V.ApplicationId IS NOT NULL AND V.ParentBinaryVersion >= '6.16' THEN COALESCE(AttendeeMeetings, 0) ELSE 0 END AS AttendeeMeetings,
+CASE WHEN V.ApplicationId IS NOT NULL AND V.ParentBinaryVersion >= '6.16' THEN COALESCE(ExhibitorMeetings, 0) ELSE 0 END AS ExhibitorMeetings
+
 
 FROM PUBLIC.AuthDB_Applications A
 
@@ -68,7 +73,8 @@ LEFT OUTER JOIN
   MAX(CASE WHEN TypeId = 8 AND selected = 'true' THEN 1 ELSE 0 END) AttendeesList,
   MAX(CASE WHEN TypeId = 15 AND selected = 'true' THEN 1 ELSE 0 END) QRCode,
   MAX(CASE WHEN TypeId = 205 AND Selected = 'true' THEN 1 ELSE 0 END) DirectMessaging,
-  MAX(CASE WHEN TypeId = 206 AND Selected = 'true' THEN 1 ELSE 0 END) TopicChannel
+  MAX(CASE WHEN TypeId = 206 AND Selected = 'true' THEN 1 ELSE 0 END) TopicChannel,
+  MAX(CASE WHEN TypeId = 20 AND Selected = 'true' THEN 1 ELSE 0 END) TargetedOffers
   FROM PUBLIC.Ratings_ApplicationConfigGridItems
   GROUP BY ApplicationId
 ) G
@@ -87,13 +93,16 @@ LEFT OUTER JOIN
   MAX(CASE WHEN Name = 'EnableSessionRecommendation' AND SettingValue = 'True' THEN 1 ELSE 0 END) SessionRecommendations,
   MAX(CASE WHEN Name = 'EnablePeopleRecommendation' AND SettingValue = 'True' THEN 1 ELSE 0 END) PeopleRecommendations,
   MAX(CASE WHEN Name = 'EnableSessionScans' AND SettingValue = 'True' THEN 1 ELSE 0 END) AttendeeSessionScans,
-  MAX(CASE WHEN Name = 'DisableStatusUpdate' AND SettingValue = 'True' THEN 1 ELSE 0 END) OrganizerOnlyFeed
+  MAX(CASE WHEN Name = 'DisableStatusUpdate' AND SettingValue = 'True' THEN 1 ELSE 0 END) OrganizerOnlyFeed,
+  MAX(CASE WHEN Name = 'AdsInActivityFeed' AND SettingValue = 'True' THEN 1 ELSE 0 END) AdsInActivityFeed,
+  MAX(CASE WHEN Name = 'EnableAvailability' AND SettingValue = 'Show All Availability to Everyone' THEN 1 ELSE 0 END) AttendeeMeetings,
+  MAX(CASE WHEN Name = 'EnableAvailability' AND SettingValue = 'Show Exhibitor Availability to Attendees Only' THEN 1 ELSE 0 END) ExhibitorMeetings
   FROM PUBLIC.Ratings_ApplicationConfigSettings
   GROUP BY ApplicationId
 ) S
 ON U.ApplicationId = S.ApplicationId
 
--- Nest Agenda (Look for )
+-- Nest Agenda Look for an event with >=1 sessionthat has a parent session.
 LEFT OUTER JOIN 
 ( SELECT DISTINCT ITEM.ApplicationId
   FROM Ratings_Item ITEM
@@ -106,6 +115,12 @@ LEFT OUTER JOIN
   AND TOPIC.IsHidden = false
 ) N
 ON U.ApplicationId = N.ApplicationId
+
+LEFT JOIN (SELECT *
+                , FN_Parent_BinaryVersion(BinaryVersion) AS ParentBinaryVersion
+          FROM EventCube.V_DimEventBinaryVersion
+          ) V
+ON U.ApplicationId = V.ApplicationId
 ;
 
 --CREATE INDEX ndx_ecs_dimevents_applicationid ON EventCube.DimEvents (ApplicationId);
