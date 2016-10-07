@@ -83,7 +83,7 @@ SELECT
         Ratings,
         Reviews,
         Surveys--number of survey responses received,
-        COALESCE(Surveys_setup_count,0),
+        COALESCE(Surveys_setup_count,0) AS SurveySetupCount,
         COALESCE(PromotedPosts,0) AS PromotedPosts,
         COALESCE(GlobalPushNotifications,0) AS GlobalPushNotifications,
         COALESCE(E.Exhibitors,0) AS Exhibitors,
@@ -105,7 +105,10 @@ SELECT
         COALESCE(LEADS_SCANNED.LeadsScannedUnique,0) AS LeadsScannedUnique,
 
         --==Welcom Email Data
-        COALESCE(welcome_count,0) AS WelcomeEmailCount
+        COALESCE(welcome_count,0) AS WelcomeEmailCount,
+
+        --==CMS Usage
+        FirstCMSLogin
 
 FROM
 --== Basic Aggregate from UserCubeSummary
@@ -316,13 +319,24 @@ LEFT OUTER JOIN
    WHERE ListTypeId = 2 AND i.IsDisabled = 0 AND i.IsArchived = 'false'
    group by i.applicationid
 ) AGENDA_SESSIONS ON S.ApplicationId = AGENDA_SESSIONS.ApplicationId
+
+---==WelcomeEmailCount
 LEFT JOIN
-( SELECT UPPER(Applicationid), COUNT(*) welcome_count
+( SELECT UPPER(Applicationid), COUNT(*) WelcomeEmailCount
   FROM MAILGUN.Mailguncube
   WHERE subject LIKE 'Welcome to%'
   GROUP BY 1) WC
 ON WC.ApplicationID = s.ApplicationID
 
+
+--==FirstCMSLogin
+LEFT JOIN
+( SELECT UPPER(application_id) AS ApplicationID ,
+        MIN(date) AS FirstCMSLogin
+        FROM GOOGLE.ep_app_pageview_counts google
+        GROUP BY 1
+) G1
+ON G1.ApplicationID = s.ApplicationID
 
 ;
 
