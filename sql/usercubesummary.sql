@@ -92,6 +92,10 @@ SELECT
   COALESCE(e.AttendeeSessionScans, -1) AS AttendeeSessionScans,
   COALESCE(e.OrganizerOnlyFeed, -1) AS OrganizerOnlyFeed,
   COALESCE(e.NestedAgenda, -1) AS NestedAgenda,
+  COALESCE(e.TargetedOffers, -1) AS TargetedOffers,
+  COALESCE(e.AdsInActivityFeed, -1) AS AdsInActivityFeed,
+  COALESCE(e.AttendeeMeetings, -1) AS AttendeeMeetings,
+  COALESCE(e.ExhibitorMeetings, -1) AS ExhibitorMeetings,
 
   --== SalesForce Metadata
   COALESCE(SF.EventType,'_Unknown') AS EventType, 
@@ -180,6 +184,11 @@ SELECT
   base.AttendeeSessionScans,
   base.OrganizerOnlyFeed,
   base.NestedAgenda,
+  base.TargetedOffers,
+  base.AdsInActivityFeed,
+  base.AttendeeMeetings,
+  base.ExhibitorMeetings,
+
   base.EventType, 
   base.EventSize, 
   base.AccountCustomerDomain, 
@@ -209,7 +218,7 @@ LEFT OUTER JOIN UserCubeSummary_Surveys V ON base.UserId = V.UserId
 TRUNCATE TABLE EventCube.STG_UserCubeSummary_INSERT;
 VACUUM EventCube.STG_UserCubeSummary_INSERT;
 INSERT INTO EventCube.STG_UserCubeSummary_INSERT
-SELECT ApplicationId, Name, StartDate, EndDate, GlobalUserId, UserId, FirstTimestamp, LastTimestamp, Facebook, Twitter, LinkedIn, Device, DeviceType, BinaryVersion, Active, Engaged, Sessions, EventSessions, Posts, PostsImage, PostsItem, Likes, Comments, TotalBookmarks, ImportedBookmarks, Follows, CheckIns, CheckInsHeadCount, Ratings, Reviews, Surveys, OpenEvent, LeadScanning, SurveysOn, InteractiveMap, Leaderboard, Bookmarking, PhotoFeed, AttendeesList, QRCode, DirectMessaging, TopicChannel, ExhibitorReqInfo, ExhibitorMsg, PrivateMsging, PeopleMatching, SocialNetworks, RatingsOn, NativeSessionNotes, SessionChannel, SessionRecommendations, PeopleRecommendations, AttendeeSessionScans, OrganizerOnlyFeed, NestedAgenda, EventType, EventSize, AccountCustomerDomain, ServiceTierName, App365Indicator, OwnerName FROM (
+SELECT ApplicationId, Name, StartDate, EndDate, GlobalUserId, UserId, FirstTimestamp, LastTimestamp, Facebook, Twitter, LinkedIn, Device, DeviceType, BinaryVersion, Active, Engaged, Sessions, EventSessions, Posts, PostsImage, PostsItem, Likes, Comments, TotalBookmarks, ImportedBookmarks, Follows, CheckIns, CheckInsHeadCount, Ratings, Reviews, Surveys, OpenEvent, LeadScanning, SurveysOn, InteractiveMap, Leaderboard, Bookmarking, PhotoFeed, AttendeesList, QRCode, DirectMessaging, TopicChannel, ExhibitorReqInfo, ExhibitorMsg, PrivateMsging, PeopleMatching, SocialNetworks, RatingsOn, NativeSessionNotes, SessionChannel, SessionRecommendations, PeopleRecommendations, AttendeeSessionScans, OrganizerOnlyFeed, NestedAgenda, TargetedOffers, AdsInActivityFeed, AttendeeMeetings, ExhibitorMeetings, EventType, EventSize, AccountCustomerDomain, ServiceTierName, App365Indicator, OwnerName FROM (
 SELECT a.*, b.UserId AS bUserId FROM EventCube.STG_UserCubeSummary a
 --Forced to use the Left Join instead of NOT IN logic (due to performance)
 LEFT JOIN (SELECT DISTINCT UserId FROM EventCube.UserCubeSummary) b ON a.UserId = b.UserId
@@ -253,6 +262,11 @@ SET
   AttendeeSessionScans = EventCube.STG_UserCubeSummary_UPDATE.AttendeeSessionScans,
   OrganizerOnlyFeed = EventCube.STG_UserCubeSummary_UPDATE.OrganizerOnlyFeed,
   NestedAgenda = EventCube.STG_UserCubeSummary_UPDATE.NestedAgenda,
+  TargetedOffers = EventCube.STG_UserCubeSummary_UPDATE.TargetedOffers,
+  AdsInActivityFeed = EventCube.STG_UserCubeSummary_UPDATE.AdsInActivityFeed,
+  AttendeeMeetings = EventCube.STG_UserCubeSummary_UPDATE.AttendeeMeetings,
+  ExhibitorMeetings = EventCube.STG_UserCubeSummary_UPDATE.ExhibitorMeetings,
+
   EventType = EventCube.STG_UserCubeSummary_UPDATE.EventType,
   EventSize = EventCube.STG_UserCubeSummary_UPDATE.EventSize,
   AccountCustomerDomain = EventCube.STG_UserCubeSummary_UPDATE.AccountCustomerDomain,
