@@ -348,6 +348,7 @@ LEFT JOIN
 ON G1.ApplicationID = s.ApplicationID
 ;
 */
+;
 
 -- Create the View for Reporter user
 CREATE OR REPLACE VIEW report.v_eventcubesummary AS
