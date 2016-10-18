@@ -1,3 +1,9 @@
+
+TRUNCATE TABLE RUDO.CMSUserCube;
+
+VACUUM  RTERRY.CMSUserCube;
+INSERT INTO RTERRY.CMSUserCube
+
 SELECT  UPPER(PAGES.globaluserid) AS GlobalUserId,
         UPPER(PAGES.applicationid) AS ApplicationID,
         RGD.emailaddress AS emailadress,
@@ -39,3 +45,4 @@ JOIN ( SELECT firstname,
         FROM KEVIN.Ratings_GlobalUserDetails
       )RGD
 ON PAGES.GlobalUserId = RGD.GlobalUserId AND PAGES.ApplicationID = RGD.ApplicationID
+;
