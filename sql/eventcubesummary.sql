@@ -112,7 +112,8 @@ SELECT
         COALESCE(WelcomeEmailCount,0) AS WelcomeEmailCount,
 
         --==CMS Usage
-        FirstCMSLogin
+        FirstCMSLogin,
+        LastCMSLogin
 
 FROM
 --== Basic Aggregate from UserCubeSummary
@@ -340,7 +341,8 @@ ON UPPER(WC.ApplicationID::VARCHAR) = s.ApplicationID
 --==FirstCMSLogin
 LEFT JOIN
 ( SELECT UPPER(application_id) AS ApplicationID ,
-        MIN(date) AS FirstCMSLogin
+        MIN(date) AS FirstCMSLogin,
+        MAX(date) AS LastCMSLogin
         FROM GOOGLE.ep_app_pageview_counts google
         GROUP BY 1
 ) G1
