@@ -1,8 +1,8 @@
 
-TRUNCATE TABLE RTERRY .CMSUserCube;
+TRUNCATE TABLE EventCube.CMSUserCube;
 
-VACUUM  RTERRY.CMSUserCube;
-INSERT INTO RTERRY.CMSUserCube
+VACUUM  EventCube.CMSUserCube;
+INSERT INTO EventCube.CMSUserCube
 
 SELECT  UPPER(PAGES.globaluserid) AS GlobalUserId,
         UPPER(PAGES.applicationid) AS ApplicationID,
