@@ -109,7 +109,7 @@ SELECT
         COALESCE(LEADS_SCANNED.LeadsScannedUnique,0) AS LeadsScannedUnique,
 
         --==Welcom Email Data
-        NULL AS WelcomeEmailCount,
+        WC.WelcomeEmailCount,
 
         --==CMS Usage
         NULL AS FirstCMSLogin
@@ -329,7 +329,7 @@ LEFT OUTER JOIN
 ) AGENDA_SESSIONS ON S.ApplicationId = AGENDA_SESSIONS.ApplicationId
 
 ---==WelcomeEmailCount
-/*
+
 LEFT JOIN
 ( SELECT Applicationid, COUNT(*) WelcomeEmailCount
   FROM MAILGUN.Mailguncube
@@ -337,7 +337,7 @@ LEFT JOIN
   GROUP BY 1) WC
 ON UPPER(WC.ApplicationID::VARCHAR) = s.ApplicationID
 
-
+/*
 --==FirstCMSLogin
 LEFT JOIN
 ( SELECT UPPER(application_id) AS ApplicationID ,
