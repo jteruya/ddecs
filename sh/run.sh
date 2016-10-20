@@ -52,7 +52,7 @@ echo `date` running dimevents.sql; $run_sql $wd"/../sql/dimevents.sql"
 # Da cubes
 echo `date` running usercubesummary.sql; $run_sql $wd"/../sql/usercubesummary.sql"
 echo `date` running eventcubesummary.sql; $run_sql $wd"/../sql/eventcubesummary.sql"
-echo `date` running CMSUserCube.sql; $run_sql $wd"/../sql/CMSUserCube.sql" 
+echo `date` running CMSUsercube.sql; $run_sql $wd"/../sql/CMSUsercube.sql" 
 
 # ------------------------------------------------------------------------
 # User cube by date
